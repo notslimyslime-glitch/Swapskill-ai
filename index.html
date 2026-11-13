@@ -42,10 +42,9 @@ function saveProfile(){profile={name:document.getElementById("name").value.trim(
 function fillProfile(){["name","teach","learn","mycat","about"].forEach(k=>{if(profile[k]!==undefined)document.getElementById(k).value=profile[k]})}
 function renderRequests(){let el=document.getElementById("requests");el.innerHTML=requests.length?requests.map(r=>'<div class="request"><div><b>'+esc(r.name)+'</b><div class="muted">Swap around '+esc(r.skill)+'</div></div><span class="tag">'+esc(r.status)+'</span></div>').join(""):'<div class="empty">No requests yet. Discover someone whose skills interest you!</div>'}
 function updateStats(){document.getElementById("creditTop").textContent=credits;document.getElementById("creditStat").textContent=credits;document.getElementById("skillStat").textContent=profile.teach?1:0;document.getElementById("requestStat").textContent=requests.length}
-renderPeople();fillProfile();updateStats();renderRequests();
-
 const db=window.supabase.createClient("https://qmjmfjgqfmrrdlgmjksh.supabase.co","sb_publishable_gOwrGejFZia29Yl8GlzI7A_RNenYsud");
 let user=null, people=[], swaps=[];
+fillProfile();updateStats();renderRequests();
 const status=m=>document.getElementById("authStatus").textContent=m;
 async function signUp(){const email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPassword").value;if(!email||password.length<8)return status("Enter an email and a password of at least 8 characters.");const {data,error}=await db.auth.signUp({email,password});if(error)return status(error.message);status(data.session?"Account created.":"Check your email to confirm, then sign in.");if(data.session)await loadCloud();}
 async function signIn(){const email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPassword").value;const {error}=await db.auth.signInWithPassword({email,password});if(error)return status(error.message);await loadCloud();}
