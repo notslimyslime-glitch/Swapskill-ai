@@ -58,5 +58,43 @@ create policy "Members can send swap requests as themselves"
 on public.swap_requests for insert to authenticated
 with check (auth.uid() = sender_id and auth.uid() <> recipient_id);
 
--- Deliberately no public access and no update/delete policy for requests in this first version.
+
+
+-- Secure response flow: only the intended recipient can accept or decline.
+-- The function changes only the status field; no broad UPDATE policy is added.
+create or replace function public.respond_to_swap_request(
+  p_request_id uuid,
+  p_status text
+)
+returns table(id uuid, status text)
+language plpgsql
+security definer
+set search_path = public, pg_temp
+as $
+begin
+  if auth.uid() is null then
+    raise exception 'You must be signed in.';
+  end if;
+  if p_status not in ('accepted', 'declined') then
+    raise exception 'Status must be accepted or declined.';
+  end if;
+
+  return query
+  update public.swap_requests as sr
+     set status = p_status
+   where sr.id = p_request_id
+     and sr.recipient_id = auth.uid()
+     and sr.status = 'pending'
+  returning sr.id, sr.status;
+
+  if not found then
+    raise exception 'Request not found, already answered, or you are not its recipient.';
+  end if;
+end;
+$;
+
+revoke all on function public.respond_to_swap_request(uuid, text) from public;
+grant execute on function public.respond_to_swap_request(uuid, text) to authenticated;
+
+-- No direct UPDATE/DELETE policy is granted for swap requests; responses go through the restricted function.
 -- Add teacher/moderator approval before inviting a real student community.
