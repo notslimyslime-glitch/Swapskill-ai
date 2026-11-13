@@ -70,7 +70,7 @@ returns table(id uuid, status text)
 language plpgsql
 security definer
 set search_path = public, pg_temp
-as $
+as $function$
 begin
   if auth.uid() is null then
     raise exception 'You must be signed in.';
@@ -91,7 +91,7 @@ begin
     raise exception 'Request not found, already answered, or you are not its recipient.';
   end if;
 end;
-$;
+$function$;
 
 revoke all on function public.respond_to_swap_request(uuid, text) from public;
 grant execute on function public.respond_to_swap_request(uuid, text) to authenticated;
