@@ -73,8 +73,9 @@ function renderSwaps(){
   const myDone=outgoing?x.sender_completed:x.recipient_completed;
   const theirDone=outgoing?x.recipient_completed:x.sender_completed;
   const finished=!!x.sender_completed&&!!x.recipient_completed;
+  const learningSkill=outgoing?x.skill:(other?.teaches||"their listed skill");
   const button=!finished&&!myDone?'<button onclick="markSwapComplete(\''+x.id+'\')">Mark my part complete</button>':myDone&&!finished?'<button disabled class="decline">Your part completed ✓</button>':'';
-  return '<article class="card"><div class="person"><div class="avatar">'+esc((other?.display_name||"S")[0])+'</div><div><h3>'+esc(other?.display_name||"SkillSwap member")+'</h3><span class="tag">'+(finished?"Completed":"Active swap")+'</span></div></div><p><b>Exchange skill:</b> '+esc(x.skill)+'</p><p><b>Your progress:</b> '+(myDone?"Complete ✓":"Not completed yet")+'</p><p><b>Their progress:</b> '+(theirDone?"Complete ✓":"Waiting for confirmation")+'</p>'+button+'</article>';
+  return '<article class="card"><div class="person"><div class="avatar">'+esc((other?.display_name||"S")[0])+'</div><div><h3>'+esc(other?.display_name||"SkillSwap member")+'</h3><span class="tag">'+(finished?"Completed":"Active swap")+'</span></div></div><p><b>You teach:</b> '+esc(profile.teach||"Your listed skill")+'</p><p><b>You learn:</b> '+esc(learningSkill)+'</p><p><b>Your progress:</b> '+(myDone?"Complete ✓":"Not completed yet")+'</p><p><b>Their progress:</b> '+(theirDone?"Complete ✓":"Waiting for confirmation")+'</p>'+button+'</article>';
  };
  const activeRows=mine.filter(x=>!(x.sender_completed&&x.recipient_completed));
  const doneRows=mine.filter(x=>x.sender_completed&&x.recipient_completed);
