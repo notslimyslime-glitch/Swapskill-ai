@@ -60,7 +60,7 @@ async function savePlan(requestId){
  if(!user)return;
  const goal=document.getElementById("goal_"+requestId).value.trim();
  const sessionValue=document.getElementById("session_"+requestId).value;
- const raw=document.getElementById("tasks_"+requestId).value.split("\\n").map(x=>x.trim()).filter(Boolean).slice(0,12);
+ const raw=document.getElementById("tasks_"+requestId).value.split("\n").map(x=>x.trim()).filter(Boolean).slice(0,12);
  const previous=plans.find(p=>p.request_id===requestId);
  const tasks=raw.map(label=>{const old=(previous?.tasks||[]).find(t=>t.label===label);return {label,sender_done:!!old?.sender_done,recipient_done:!!old?.recipient_done};});
  const row={request_id:requestId,goal,session_at:sessionValue?new Date(sessionValue).toISOString():null,tasks,updated_by:user.id};
