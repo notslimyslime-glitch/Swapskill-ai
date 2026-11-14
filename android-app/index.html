@@ -213,6 +213,7 @@ button{min-height:42px;touch-action:manipulation}
 </head>
 <body><main class="wrap">
 <header class="top"><div class="brand">Skill<span>Swap</span> ✳</div><button class="profile-shortcut" type="button" onclick="showTab('account')" aria-label="Open your profile" title="Your profile"><span id="navProfileAvatar">S</span></button></header>
+<section id="account" class="page hidden">
 <section class="account-hero">
  <div class="account-orbit account-orbit-one"></div><div class="account-orbit account-orbit-two"></div>
  <div class="account-hero-top"><span class="account-kicker">YOUR SPACE · YOUR SKILLS</span><span class="account-status-pill"><i></i> SkillSwap member</span></div>
@@ -301,7 +302,7 @@ function updateAccountPreview(){
  if(t)t.textContent=teach||"Add a skill";
  if(l)l.textContent=learn||"Pick a new skill";
 }
-function fillProfile(){["name","teach","learn","mycat","swapMode","about"].forEach(k=>{if(profile[k]!==undefined)document.getElementById(k).value=profile[k]})}
+function fillProfile(){["name","teach","learn","mycat","swapMode","about"].forEach(k=>{if(profile[k]!==undefined)document.getElementById(k).value=profile[k]});updateAccountPreview()}
 function renderRequests(){let el=document.getElementById("requests");el.innerHTML=requests.length?requests.map(r=>'<div class="request"><div><b>'+esc(r.name)+'</b><div class="muted">Swap around '+esc(r.skill)+'</div></div><span class="tag">'+esc(r.status)+'</span></div>').join(""):'<div class="empty">No requests yet. Discover someone whose skills interest you!</div>'}
 function updateStats(){document.getElementById("skillStat").textContent=profile.teach?1:0;document.getElementById("requestStat").textContent=requests.length}
 const db=window.supabase.createClient("https://qmjmfjgqfmrrdlgmjksh.supabase.co","sb_publishable_gOwrGejFZia29Yl8GlzI7A_RNenYsud");
