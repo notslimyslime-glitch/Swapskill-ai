@@ -177,6 +177,56 @@ body.account-open .tabs{display:none!important}
 .tutorial-overlay{position:fixed;inset:0;z-index:10050;background:#070a12d9;backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:18px}.tutorial-overlay.open{display:flex}.tutorial-card{width:min(100%,480px);background:linear-gradient(145deg,#20283a,#121824);border:1px solid #46506a;border-radius:24px;padding:24px;box-shadow:0 24px 80px #000a;position:relative}.tutorial-kicker{color:var(--b);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase}.tutorial-card h2{font-size:27px;line-height:1.15;margin:10px 0}.tutorial-card p{color:var(--muted);margin:0;min-height:74px}.tutorial-progress{display:flex;gap:6px;margin:20px 0}.tutorial-progress span{height:5px;flex:1;border-radius:9px;background:#3a4357}.tutorial-progress span.active{background:linear-gradient(90deg,var(--a),var(--b))}.tutorial-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.tutorial-actions button{margin:0}.tutorial-actions .tutorial-quiet{background:#30394b;color:#d7deed}.tutorial-actions .tutorial-open{background:transparent;border:1px solid #58627b;color:#dce2f2}.tutorial-help{background:#252d40;color:#d9ddf2;padding:9px 12px;border:1px solid var(--line)}@media(max-width:520px){.tutorial-card{padding:20px}.tutorial-card h2{font-size:24px}.tutorial-actions{display:grid;grid-template-columns:1fr 1fr}.tutorial-actions .tutorial-open{grid-column:1/-1;grid-row:1}}
 
 .account-save-row button:disabled{opacity:.42;cursor:not-allowed;filter:saturate(.45)}.profile-progress{margin:18px 0 20px;padding:15px 16px;border:1px solid rgba(137,128,255,.2);border-radius:15px;background:rgba(25,32,51,.72)}.profile-progress-top{display:flex;justify-content:space-between;align-items:center;gap:12px}.profile-progress-top strong{font-size:13px}.profile-progress-value{font-size:13px;font-weight:850;color:#bdb7ff;font-variant-numeric:tabular-nums}.profile-progress-track{height:8px;margin:10px 0 12px;border-radius:99px;background:#293247;overflow:hidden}.profile-progress-fill{height:100%;width:0;border-radius:inherit;background:linear-gradient(90deg,#7772ef,#55c9a0);transition:width .25s ease}.profile-progress-note{font-size:11px;line-height:1.45;color:#aab5c9;margin:0 0 11px}.profile-progress-list{display:grid;grid-template-columns:1fr 1fr;gap:7px 12px}.profile-progress-item{display:flex;align-items:center;gap:7px;font-size:11px;color:#aab5c9}.profile-progress-item .check{width:17px;height:17px;display:grid;place-items:center;flex:0 0 17px;border-radius:50%;background:#293247;color:#8794aa;font-size:10px;font-weight:900}.profile-progress-item.done{color:#dce8e8}.profile-progress-item.done .check{background:rgba(76,190,145,.16);color:#75e0b4}@media(max-width:520px){.profile-progress{padding:13px}.profile-progress-list{grid-template-columns:1fr}}
+ 
+/* Account security settings */
+.account-settings-box{margin-top:18px;padding:16px;border:1px solid var(--line);border-radius:15px;background:rgba(10,16,29,.38);display:grid;gap:10px}
+.account-settings-box h3{margin:0 0 2px;font-size:15px}
+.account-settings-box label{font-size:12px;color:var(--muted);font-weight:700}
+.account-settings-box input{width:100%;min-width:0;padding:12px;border-radius:11px;border:1px solid var(--line);background:#101725;color:var(--text)}
+.account-settings-box button{width:100%;margin:0}
+.account-delete-note{margin-top:5px;padding:12px;border-radius:11px;background:rgba(230,170,90,.08);border:1px solid rgba(230,170,90,.2)}
+.account-delete-note strong{font-size:12px}.account-delete-note p{margin:4px 0 0;color:var(--muted);font-size:11px;line-height:1.55}
+/* Loading and error feedback */
+button:disabled{opacity:.55;cursor:wait}
+[aria-busy="true"]{cursor:progress}
+.loading-message,.error-message{padding:16px;border-radius:14px;border:1px solid var(--line);background:var(--panel);color:var(--muted);text-align:center}
+.error-message{border-color:rgba(255,130,130,.35);color:#ffc0c0}
+.retry-button{margin-top:10px;background:#29334a;border:1px solid #3c4963}
+/* Mobile finishing pass */
+@media(max-width:700px){
+ body{font-size:14px}
+ .wrap{width:100%;padding:13px 14px 24px}
+ .top{align-items:center;gap:8px}.brand{font-size:19px}
+ .top-actions{display:flex;gap:6px;flex-shrink:0}
+ .tabs{position:sticky;top:0;z-index:30;background:rgba(13,16,24,.94);backdrop-filter:blur(12px);scrollbar-width:none;padding:9px 14px;margin:0 -14px 12px;gap:6px}
+ .tabs::-webkit-scrollbar{display:none}
+ .tabs button{flex:0 0 auto;min-height:42px;padding:10px 12px;font-size:12px}
+ button{min-height:42px}
+ input,select,textarea{font-size:16px!important;max-width:100%}
+ .card,.stat,.formbox{min-width:0}
+ .person,.request,.sectionhead{gap:10px}
+ .account-layout{gap:12px}.account-panel{min-width:0}
+ .account-form-grid{grid-template-columns:minmax(0,1fr);gap:0}
+ .account-field-wide{grid-column:auto}
+ .account-save-row{display:grid;grid-template-columns:1fr;gap:10px}
+ .account-save-row button{width:100%}
+ .account-hero{padding:20px 16px 17px}
+ .account-identity{gap:12px;align-items:center}
+ .account-identity h1{font-size:clamp(23px,7vw,32px);overflow-wrap:anywhere}
+ .account-skill-preview{gap:8px;padding:12px}
+ .account-skill-preview strong{font-size:13px;overflow-wrap:anywhere}
+ .avatar-picker{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:7px}
+ .avatar-choice{width:100%;min-width:0;min-height:46px}
+ .notification-item{align-items:flex-start}
+ .room-page-head{flex-wrap:wrap}
+ .room-composer{gap:7px}.room-composer input{min-width:0}
+}
+@media(max-width:380px){
+ .wrap{padding-left:11px;padding-right:11px}
+ .tabs{margin-left:-11px;margin-right:-11px;padding-left:11px;padding-right:11px}
+ .stats{grid-template-columns:1fr 1fr}
+ .account-skill-preview{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr)}
+}
 </style>
 </head>
 <body><main class="wrap">
@@ -193,7 +243,9 @@ body.account-open .tabs{display:none!important}
  <section class="account-panel account-auth-panel">
   <div class="account-panel-heading"><div class="account-panel-icon">◈</div><div><span class="account-eyebrow">ACCOUNT ACCESS</span><h2>Your cloud account</h2></div></div>
   <div id="authPanel" class="account-auth-content"><p class="muted">Sign in to sync your profile, requests and mission rooms across devices.</p><label for="authEmail">Email address</label><input id="authEmail" type="email" placeholder="you@example.com"><label for="authPassword">Password</label><input id="authPassword" type="password" placeholder="At least 8 characters"><div class="account-auth-actions"><button onclick="signIn()">Sign in ↗</button><button class="account-secondary-btn" onclick="signUp()">Create account</button></div><div id="authStatus" class="muted account-auth-status">Sign in to load shared profiles.</div></div>
-  <div id="signedInPanel" class="account-auth-content hidden"><div class="account-connected"><span>✓</span><div><strong>You're connected</strong><p>Your SkillSwap data is synced with the cloud.</p></div></div><button class="account-secondary-btn account-signout" onclick="signOut()">Sign out</button></div>
+  <div id="signedInPanel" class="account-auth-content hidden"><div class="account-connected"><span>✓</span><div><strong>You're connected</strong><p>Your SkillSwap data is synced with the cloud.</p></div></div><button class="account-secondary-btn account-signout" onclick="signOut()">Sign out</button>
+   <div class="account-settings-box"><h3>Security settings</h3><label for="newAccountPassword">Change password</label><input id="newAccountPassword" type="password" minlength="8" autocomplete="new-password" placeholder="New password (8+ characters)"><button type="button" class="account-secondary-btn" onclick="changeAccountPassword()">Update password</button><button type="button" class="account-secondary-btn" onclick="signOutEverywhere()">Sign out on all devices</button><div class="account-delete-note"><strong>Account deletion</strong><p>Self-service deletion isn't enabled yet. To request deletion of your account and associated data, contact the project owner. Don't share your password with anyone.</p></div></div>
+  </div>
  </section>
  <section class="account-panel account-profile-panel">
   <div class="account-panel-heading"><div class="account-panel-icon">✳</div><div><span class="account-eyebrow">YOUR SKILL IDENTITY</span><h2>Build your skill card</h2></div></div>
@@ -452,6 +504,24 @@ async function openNotification(id){
 
 async function signUp(){const email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPassword").value;if(!email||password.length<8)return status("Enter an email and a password of at least 8 characters.");const {data,error}=await db.auth.signUp({email,password});if(error){status(error.message);showToast("Could not create account: "+error.message);return;}if(data.session){status("Account created successfully.");showToast("🎉 Account created successfully!");await loadCloud();}else{status("Account created. Check your email to confirm, then sign in.");showToast("🎉 Account created! Check your email to confirm it.");}}
 async function signIn(){const email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPassword").value;const {error}=await db.auth.signInWithPassword({email,password});if(error){status(error.message);showToast("Sign in failed: "+error.message);return;}showToast("✅ Sign in successful!");await loadCloud();}
+async function changeAccountPassword(){
+ if(!user){showToast("Sign in first.");return;}
+ const input=document.getElementById("newAccountPassword"),password=input?.value||"";
+ if(password.length<8){showToast("Use at least 8 characters for your new password.");return;}
+ const button=input?.nextElementSibling;if(button){button.disabled=true;button.textContent="Updating…";}
+ const {error}=await db.auth.updateUser({password});
+ if(button){button.disabled=false;button.textContent="Update password";}
+ if(error){showToast("Password update failed: "+error.message);return;}
+ input.value="";showToast("Password updated successfully.");
+}
+async function signOutEverywhere(){
+ if(!user)return;
+ const button=document.querySelector(".account-settings-box button:last-of-type");
+ if(button){button.disabled=true;button.textContent="Signing out…";}
+ const {error}=await db.auth.signOut({scope:"global"});
+ if(error){if(button){button.disabled=false;button.textContent="Sign out on all devices";}showToast("Could not sign out everywhere: "+error.message);return;}
+ closeRoomChannels();closeNotificationChannel();user=null;isFirstProfileSetup=false;profileSaved=false;profileDirty=false;people=[];swaps=[];notifications=[];renderNotificationBadge();renderNotifications();syncAuthPanel();renderPeople();renderRequests();renderSwaps();showToast("Signed out on all devices.");
+}
 async function signOut(){closeRoomChannels();closeNotificationChannel();const {error}=await db.auth.signOut();if(error){showToast("Sign out failed: "+error.message);return;}user=null;isFirstProfileSetup=false;profileSaved=false;profileDirty=false;people=[];swaps=[];notifications=[];renderNotificationBadge();renderNotifications();syncAuthPanel();status("Signed out.");renderPeople();renderRequests();}
 async function loadCloud(){const {data:{user:u}}=await db.auth.getUser();user=u;syncAuthPanel();if(!user){closeNotificationChannel();notifications=[];renderNotificationBadge();renderNotifications();status("Not signed in. Demo profiles only.");renderPeople();return;}status("Loading shared SkillSwap data...");const [p,s,pl,lb]=await Promise.all([db.from("profiles").select("id,display_name,teaches,learns,category,about,swap_mode,avatar_emoji,skills_tags").order("created_at",{ascending:false}),db.from("swap_requests").select("id,sender_id,recipient_id,skill,status,sender_completed,recipient_completed").order("created_at",{ascending:false}),db.from("swap_plans").select("id,request_id,goal,session_at,tasks,updated_by").order("updated_at",{ascending:false}),db.from("leaderboard_scores").select("user_id,display_name,total_xp,weekly_xp").order("total_xp",{ascending:false})]);if(p.error||s.error){status("Could not load profiles or requests: "+(p.error||s.error).message);return;}people=p.data||[];swaps=s.data||[];await loadBlockedMembers();plans=pl.error?[]:(pl.data||[]);leaderboardRows=lb.error?[]:(lb.data||[]);requests=swaps.filter(x=>x.sender_id===user.id).map(x=>({name:(people.find(p=>p.id===x.recipient_id)||{}).display_name||"Member",skill:x.skill,status:x.status}));const mine=people.find(x=>x.id===user.id);isFirstProfileSetup=!mine;profileSaved=!!mine;profileDirty=false;profile=mine?{name:mine.display_name,teach:mine.teaches,learn:mine.learns,cat:mine.category,about:mine.about,swapMode:mine.swap_mode||"online",avatar:mine.avatar_emoji||"🎓",tags:mine.skills_tags||[]}:{};fillProfile();renderPeople();renderRequests();renderSwaps();renderChatPage();renderLeaderboard();updateStats();updateProfileCompletion();updateProfileSaveButton();await loadNotifications();setupNotificationChannel();status("Connected! "+people.length+" shared profile(s)."+(pl.error?" Session planner setup needed: run supabase-session-planner.sql.":""));const route=location.hash.slice(1);if(route.startsWith("room-"))setTimeout(()=>selectChatRoom(route.slice(5)),0);}
 async function saveProfile(){if(!user)return status("Sign in first to save your profile.");if(!profileCardReady()){updateProfileSaveButton();document.getElementById("savedMsg").textContent="Complete your display name and both skills before saving.";return;}const button=document.getElementById("saveProfileButton");if(button)button.disabled=true;const rawTags=document.getElementById("skillTags").value.split(",").map(x=>x.trim()).filter(Boolean);const tags=[...new Set(rawTags)].slice(0,8).map(x=>x.slice(0,24));const row={id:user.id,display_name:document.getElementById("name").value.trim(),teaches:document.getElementById("teach").value.trim(),learns:document.getElementById("learn").value.trim(),category:document.getElementById("mycat").value,about:document.getElementById("about").value.trim(),swap_mode:document.getElementById("swapMode").value,avatar_emoji:profile.avatar||"🎓",skills_tags:tags};const {error}=await db.from("profiles").upsert(row);if(error){document.getElementById("savedMsg").textContent=error.message;updateProfileSaveButton();return;}document.getElementById("savedMsg").textContent="Saved to the shared database!";profileSaved=true;profileDirty=false;isFirstProfileSetup=false;updateAccountPreview();updateProfileCompletion();updateProfileSaveButton();await loadCloud();}
