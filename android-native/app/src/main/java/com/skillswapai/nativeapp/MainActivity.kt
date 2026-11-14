@@ -127,6 +127,8 @@ private fun SkillSwapApp(activity: ComponentActivity) {
     var swaps by remember { mutableStateOf<List<Swap>>(emptyList()) }
     var selectedRoom by remember { mutableStateOf<Swap?>(null) }
     var roomMessages by remember { mutableStateOf<List<RoomMessage>>(emptyList()) }
+    var planGoal by remember { mutableStateOf("") }
+    var planTasks by remember { mutableStateOf("") }
     var messageDraft by remember { mutableStateOf("") }
     var leaderboard by remember { mutableStateOf<List<LeaderboardEntry>>(emptyList()) }
     var notifications by remember { mutableStateOf<List<AppNotification>>(emptyList()) }
@@ -248,6 +250,40 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                 }
                 roomMessages = result.reversed()
             } catch (e: Exception) { message = e.message ?: "Could not load room messages." }
+        }
+    }
+
+    fun loadRoomPlan(requestId: String, token: String) {
+        scope.launch {
+            try {
+                val plan = withContext(Dispatchers.IO) {
+                    val rows = request("/rest/v1/swap_plans?select=goal,tasks&request_id=eq.$requestId&limit=1", token = token).optJSONArray("data") ?: JSONArray()
+                    if (rows.length() == 0) null else rows.getJSONObject(0)
+                }
+                planGoal = plan?.optString("goal").orEmpty()
+                val tasks = plan?.optJSONArray("tasks") ?: JSONArray()
+                planTasks = (0 until tasks.length()).map { tasks.optString(it) }.joinToString("\\n")
+            } catch (e: Exception) { message = e.message ?: "Could not load the session plan." }
+        }
+    }
+
+    fun saveRoomPlan(requestId: String) {
+        val token = accessToken ?: return
+        val goal = planGoal.trim()
+        if (goal.isBlank()) { message = "Add a shared goal first."; return }
+        val tasks = JSONArray()
+        planTasks.lines().map { it.trim() }.filter { it.isNotBlank() }.take(12).forEach { tasks.put(it) }
+        scope.launch {
+            busy = true
+            try {
+                withContext(Dispatchers.IO) {
+                    request("/rest/v1/swap_plans?on_conflict=request_id", "POST", token,
+                        JSONObject().put("request_id", requestId).put("goal", goal).put("tasks", tasks).put("updated_by", userId),
+                        "resolution=merge-duplicates,return=minimal")
+                }
+                message = "Shared session plan saved."
+            } catch (e: Exception) { message = e.message ?: "Could not save the session plan." }
+            busy = false
         }
     }
 
@@ -486,12 +522,15 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                             selectedRoom = it
                             messageDraft = ""
                             loadRoomMessages(it.id, accessToken!!)
+                            loadRoomPlan(it.id, accessToken!!)
                         } else MissionRoomScreen(
                             Modifier.padding(padding), room, userId.orEmpty(), roomMessages, messageDraft,
                             { messageDraft = it }, busy,
                             { sendRoomMessage(room.id) },
                             { accessToken?.let { token -> loadRoomMessages(room.id, token) } },
-                            { selectedRoom = null; roomMessages = emptyList() }
+                            planGoal, { planGoal = it }, planTasks, { planTasks = it },
+                            { saveRoomPlan(room.id) }, accessToken.orEmpty(),
+                            { selectedRoom = null; roomMessages = emptyList(); planGoal = ""; planTasks = "" }
                         )
                     }
                     "Ranks" -> LeaderboardScreen(Modifier.padding(padding), leaderboard, busy, message) { accessToken?.let { loadLeaderboard(it) } }
