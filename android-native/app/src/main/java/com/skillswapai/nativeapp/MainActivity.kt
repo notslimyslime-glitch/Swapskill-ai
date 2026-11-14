@@ -22,12 +22,19 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Leaderboard
@@ -44,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -74,6 +82,30 @@ private fun accentColor(choice: String): Color = when (choice) {
     "Violet" -> Color(0xFFC2A5F5)
     "Amber" -> Color(0xFFE5BD78)
     else -> Color(0xFF9BC69A)
+}
+private fun ambientBackground(choice: String): Color = when (choice) {
+    "Ocean" -> Color(0xFF0C151B)
+    "Violet" -> Color(0xFF15101C)
+    "Amber" -> Color(0xFF1B160D)
+    else -> BackgroundDark
+}
+private fun ambientSurface(choice: String): Color = when (choice) {
+    "Ocean" -> Color(0xFF172831)
+    "Violet" -> Color(0xFF261D32)
+    "Amber" -> Color(0xFF2C2418)
+    else -> SurfaceDark
+}
+private fun ambientSecondary(choice: String): Color = when (choice) {
+    "Ocean" -> Color(0xFF153847)
+    "Violet" -> Color(0xFF38264D)
+    "Amber" -> Color(0xFF443317)
+    else -> Forest
+}
+private fun ambientTertiary(choice: String): Color = when (choice) {
+    "Ocean" -> Color(0xFF205166)
+    "Violet" -> Color(0xFF50366D)
+    "Amber" -> Color(0xFF624A22)
+    else -> ForestLight
 }
 
 data class Member(val id: String, val name: String, val teaches: String, val learns: String, val about: String)
@@ -148,6 +180,8 @@ private fun SkillSwapApp(activity: ComponentActivity) {
     var emailInput by remember { mutableStateOf("") }
     var passwordInput by remember { mutableStateOf("") }
     var displayName by remember { mutableStateOf("") }
+    var avatarEmoji by remember { mutableStateOf("🎓") }
+    var sentMessageScrollKey by remember { mutableIntStateOf(0) }
     var teaches by remember { mutableStateOf("") }
     var learns by remember { mutableStateOf("") }
     var about by remember { mutableStateOf("") }
@@ -280,6 +314,64 @@ private fun SkillSwapApp(activity: ComponentActivity) {
         }
     }
 
+    fun cancelSwapRequest(requestId: String) {
+        val token = accessToken ?: return
+        scope.launch {
+            busy = true
+            try {
+                withContext(Dispatchers.IO) {
+                    request("/rest/v1/swap_requests?id=eq.$requestId&status=eq.pending", "PATCH", token,
+                        JSONObject().put("status", "cancelled"), "return=minimal")
+                }
+                message = "Request cancelled. You can send a new one later."
+                loadSwaps(token)
+            } catch (e: Exception) { message = e.message ?: "Could not cancel this request." }
+            busy = false
+        }
+    }
+
+    fun updateAccountDetails(newName: String, newAbout: String, newAvatar: String) {
+        val token = accessToken ?: return
+        if (newName.isBlank()) { message = "Your display name can't be empty."; return }
+        scope.launch {
+            busy = true
+            try {
+                withContext(Dispatchers.IO) {
+                    request("/rest/v1/profiles?id=eq.$userId", "PATCH", token,
+                        JSONObject().put("display_name", newName.trim()).put("about", newAbout.trim())
+                            .put("avatar_emoji", newAvatar), "return=minimal")
+                }
+                displayName = newName.trim()
+                about = newAbout.trim()
+                avatarEmoji = newAvatar
+                message = "Account details saved."
+                tab = "Account"
+            } catch (e: Exception) { message = e.message ?: "Could not save account details." }
+            busy = false
+        }
+    }
+
+    fun updateSkillCard(newTeach: String, newLearn: String) {
+        val token = accessToken ?: return
+        if (newTeach.isBlank() || newLearn.isBlank()) { message = "Add both skills before saving."; return }
+        scope.launch {
+            busy = true
+            try {
+                withContext(Dispatchers.IO) {
+                    request("/rest/v1/profiles?id=eq.$userId", "PATCH", token,
+                        JSONObject().put("teaches", newTeach.trim()).put("learns", newLearn.trim()),
+                        "return=minimal")
+                }
+                teaches = newTeach.trim()
+                learns = newLearn.trim()
+                message = "Skill card updated."
+                loadMembers(token)
+                tab = "Account"
+            } catch (e: Exception) { message = e.message ?: "Could not update your skill card." }
+            busy = false
+        }
+    }
+
     fun respondToSwap(requestId: String, status: String) {
         val token = accessToken ?: return
         scope.launch {
@@ -373,7 +465,11 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                         JSONObject().put("request_id", requestId).put("sender_id", userId).put("body", bodyText),
                         "return=minimal")
                 }
+                val sent = RoomMessage("local-${java.time.Instant.now().toEpochMilli()}", requestId, userId.orEmpty(),
+                    bodyText, java.time.Instant.now().toString())
+                roomMessages = roomMessages + sent
                 messageDraft = ""
+                sentMessageScrollKey++
                 loadRoomMessages(requestId, token)
             } catch (e: Exception) { message = e.message ?: "Could not send this message." }
             busy = false
@@ -466,7 +562,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                 busy = true
                 try {
                     val profile = withContext(Dispatchers.IO) {
-                        val url = "$SUPABASE_URL/rest/v1/profiles?select=display_name,teaches,learns,about&id=eq.$userId"
+                        val url = "$SUPABASE_URL/rest/v1/profiles?select=display_name,teaches,learns,about,avatar_emoji&id=eq.$userId"
                         val c = URL(url).openConnection() as HttpURLConnection
                         try {
                             c.setRequestProperty("apikey", SUPABASE_KEY)
@@ -485,6 +581,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                         teaches = profile.optString("teaches")
                         learns = profile.optString("learns")
                         about = profile.optString("about")
+                        avatarEmoji = profile.optString("avatar_emoji").ifBlank { "🎓" }
                         needsProfile = false
                         tab = "Discover"
                         loadBlockedMembers(token)
@@ -516,6 +613,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
     BackHandler(enabled = true) {
         when {
             selectedRoom != null -> { selectedRoom = null; roomMessages = emptyList() }
+            tab == "EditAccount" || tab == "EditSkills" -> tab = "Account"
             accessToken != null && !needsProfile && !showTutorial && tab != "Discover" -> tab = "Discover"
             else -> {
                 val now = SystemClock.elapsedRealtime()
@@ -528,7 +626,17 @@ private fun SkillSwapApp(activity: ComponentActivity) {
         }
     }
 
-    MaterialTheme(colorScheme = darkColorScheme(primary = accentColor(accentChoice), onPrimary = BackgroundDark, background = BackgroundDark, surface = SurfaceDark, onSurface = Cream, onBackground = Cream)) {
+    MaterialTheme(colorScheme = darkColorScheme(
+        primary = accentColor(accentChoice), secondary = ambientSecondary(accentChoice),
+        tertiary = ambientTertiary(accentChoice), onPrimary = ambientBackground(accentChoice),
+        background = ambientBackground(accentChoice), surface = ambientSurface(accentChoice),
+        onSurface = Cream, onBackground = Cream
+    )) {
+        SideEffect {
+            val systemBar = ambientBackground(accentChoice).toArgb()
+            activity.window.statusBarColor = systemBar
+            activity.window.navigationBarColor = systemBar
+        }
         if (accessToken == null) {
             AuthScreen(authMode, { authMode = it }, emailInput, { emailInput = it }, passwordInput, { passwordInput = it }, busy, message, {
                 if (emailInput.isBlank() || passwordInput.length < 8) { message = "Enter a valid email and a password with at least 8 characters." }
@@ -552,6 +660,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                         val body = JSONObject().put("id", userId).put("display_name", displayName.trim()).put("teaches", teaches.trim()).put("learns", learns.trim()).put("category", "Creative").put("about", about.trim()).put("swap_mode", "online").put("avatar_emoji", "🎓").put("skills_tags", JSONArray())
                         withContext(Dispatchers.IO) { request("/rest/v1/profiles?on_conflict=id", "POST", accessToken, body, "resolution=merge-duplicates,return=representation") }
                         needsProfile = false
+                        avatarEmoji = "🎓"
                         message = "Profile saved!"
                         loadMembers(accessToken!!)
                         tab = "Discover"
@@ -566,15 +675,15 @@ private fun SkillSwapApp(activity: ComponentActivity) {
             }
         } else {
             val hapticFeedback = LocalHapticFeedback.current
-            Scaffold(containerColor = BackgroundDark, bottomBar = {
-                if (selectedRoom == null) NavigationBar(containerColor = SurfaceDark, contentColor = Cream) {
-                    listOf(Triple("Discover", Icons.Default.Explore, "Discover"), Triple("Swaps", Icons.Default.SwapHoriz, "Swaps"), Triple("Rooms", Icons.Default.Groups, "Rooms"), Triple("Ranks", Icons.Default.Leaderboard, "Ranks")).forEach { (label, icon, route) ->
+            Scaffold(containerColor = MaterialTheme.colorScheme.background, bottomBar = {
+                if (selectedRoom == null) NavigationBar(containerColor = MaterialTheme.colorScheme.surface, contentColor = Cream) {
+                    listOf(Triple("Discover", Icons.Default.Explore, "Discover"), Triple("Match", Icons.Default.AutoAwesome, "Match"), Triple("Swaps", Icons.Default.SwapHoriz, "Swaps"), Triple("Rooms", Icons.Default.Groups, "Rooms"), Triple("Ranks", Icons.Default.Leaderboard, "Ranks")).forEach { (label, icon, route) ->
                         NavigationBarItem(selected = tab == route, onClick = {
                             if (hapticsEnabled) hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             tab = route
                             if (route == "Ranks") accessToken?.let { loadLeaderboard(it) }
                             if (route == "Rooms") selectedRoom = null
-                        }, icon = { Icon(icon, label) }, label = { Text(label, fontSize = 10.sp) }, colors = NavigationBarItemDefaults.colors(selectedIconColor = Cream, selectedTextColor = Cream, indicatorColor = ForestLight, unselectedIconColor = Muted, unselectedTextColor = Muted))
+                        }, icon = { Icon(icon, label) }, label = { Text(label, fontSize = 10.sp) }, colors = NavigationBarItemDefaults.colors(selectedIconColor = Cream, selectedTextColor = Cream, indicatorColor = MaterialTheme.colorScheme.tertiary, unselectedIconColor = Muted, unselectedTextColor = Muted))
                     }
                 }
             }) { padding ->
@@ -597,11 +706,18 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                         { tab = "Notifications"; loadNotifications(accessToken!!) },
                         { blockMember(it) }, { member, reason, details -> reportMember(member, reason, details) }
                     )
+                    "Match" -> MatchmakingScreen(
+                        Modifier.padding(padding), members, teaches, learns, busy,
+                        swaps.filter { (it.senderId == userId || it.recipientId == userId) && it.status in listOf("pending", "accepted") }
+                            .map { if (it.senderId == userId) it.recipientId else it.senderId }.toSet(),
+                        { sendSwapRequest(it) }, { tab = "EditSkills" }
+                    )
                     "Swaps" -> SwapsScreen(
                         Modifier.padding(padding), swaps, userId.orEmpty(), busy, message,
                         { id, status -> respondToSwap(id, status) },
                         { id -> markSwapComplete(id) },
-                        { accessToken?.let { loadSwaps(it) } }
+                        { accessToken?.let { loadSwaps(it) } },
+                        { id -> cancelSwapRequest(id) }
                     )
                     "Rooms" -> {
                         val room = selectedRoom
@@ -612,7 +728,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                             loadRoomPlan(it.id, accessToken!!)
                         } else MissionRoomScreen(
                             Modifier.padding(padding), room, userId.orEmpty(), roomMessages, messageDraft,
-                            { messageDraft = it }, busy,
+                            { messageDraft = it }, busy, sentMessageScrollKey,
                             { sendRoomMessage(room.id) },
                             { accessToken?.let { token -> loadRoomMessages(room.id, token) } },
                             planGoal, { planGoal = it }, planTasks, { planTasks = it },
@@ -630,13 +746,21 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                     )
                     "Notifications" -> NotificationsScreen(Modifier.padding(padding), notifications, busy,
                         { markNotificationRead(it) }, { tab = "Discover" }, { accessToken?.let { loadNotifications(it) } })
-                    "Account" -> AccountScreen(Modifier.padding(padding), displayName, email, teaches, learns, about, message,
-                        { needsProfile = true },
+                    "Account" -> AccountScreen(
+                        Modifier.padding(padding), displayName, email, teaches, learns, about, avatarEmoji, message,
+                        { tab = "EditAccount" }, { tab = "EditSkills" },
                         { current, next -> changeAccountPassword(current, next) },
-                        { showTutorial = true },
-                        { tab = "Settings" },
-                        { tab = "Discover" },
-                        { prefs.edit().remove("refresh_token").apply(); accessToken = null; userId = null; members = emptyList(); swaps = emptyList(); selectedRoom = null; tab = "Discover"; message = "Signed out." })
+                        { showTutorial = true }, { tab = "Settings" }, { tab = "Discover" },
+                        { prefs.edit().remove("refresh_token").apply(); accessToken = null; userId = null; members = emptyList(); swaps = emptyList(); selectedRoom = null; tab = "Discover"; message = "Signed out." }
+                    )
+                    "EditAccount" -> AccountDetailsEditorScreen(
+                        Modifier.padding(padding), displayName, about, avatarEmoji, busy,
+                        { name, bio, avatar -> updateAccountDetails(name, bio, avatar) }, { tab = "Account" }
+                    )
+                    "EditSkills" -> SkillCardEditorScreen(
+                        Modifier.padding(padding), teaches, learns, busy,
+                        { teach, learn -> updateSkillCard(teach, learn) }, { tab = "Account" }
+                    )
                     else -> PlaceholderScreen(targetTab, Modifier.padding(padding))
                 }
                 }
@@ -647,29 +771,56 @@ private fun SkillSwapApp(activity: ComponentActivity) {
 
 @Composable
 private fun AuthScreen(mode: String, setMode: (String) -> Unit, email: String, setEmail: (String) -> Unit, password: String, setPassword: (String) -> Unit, busy: Boolean, message: String, submit: () -> Unit) {
-    Column(Modifier.fillMaxSize().background(BackgroundDark).padding(24.dp), verticalArrangement = Arrangement.Center) {
-        Text("SKILLSWAP AI", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-        Text("Learn. Share. Grow.", color = Cream, fontSize = 31.sp, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(10.dp))
-        Text("Swap what you know for what you want to learn. No money, just teamwork.", color = Muted)
-        Spacer(Modifier.height(28.dp))
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            listOf("Sign in", "Create account").forEach { TextButton(onClick = { setMode(it) }) { Text(it, color = if (mode == it) Cream else Muted) } }
+    var showPassword by remember { mutableStateOf(false) }
+    val pulse = rememberInfiniteTransition(label = "auth-glow")
+    val glow by pulse.animateFloat(0.96f, 1.04f, infiniteRepeatable(tween(1800), RepeatMode.Reverse), label = "auth-pulse")
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.background)))) {
+        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(22.dp),
+            verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(Modifier.size(76.dp).graphicsLayer { scaleX = glow; scaleY = glow }
+                .clip(RoundedCornerShape(26.dp)).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.AutoAwesome, "SkillSwap logo", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp))
+            }
+            Spacer(Modifier.height(18.dp))
+            Text("SKILLSWAP AI", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 3.sp)
+            Text("Learn. Share. Grow.", color = Cream, fontSize = 32.sp, fontWeight = FontWeight.ExtraBold)
+            Text("Your skills have somewhere to go.", color = Muted, fontSize = 14.sp)
+            Spacer(Modifier.height(24.dp))
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(28.dp)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.96f)).padding(20.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(if (mode == "Sign in") "Welcome back" else "Create your space", color = Cream, fontSize = 23.sp, fontWeight = FontWeight.Bold)
+                Text(if (mode == "Sign in") "Pick up where your next skill journey begins." else "One account. A whole community of skills.", color = Muted, fontSize = 12.sp)
+                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.background).padding(4.dp)) {
+                    listOf("Sign in", "Create account").forEach { option ->
+                        Box(Modifier.weight(1f).clip(RoundedCornerShape(11.dp))
+                            .background(if (mode == option) MaterialTheme.colorScheme.secondary else Color.Transparent)
+                            .clickable { setMode(option) }.padding(vertical = 11.dp), contentAlignment = Alignment.Center) {
+                            Text(option, color = if (mode == option) Cream else Muted, fontWeight = FontWeight.SemiBold, fontSize = 13.sp)
+                        }
+                    }
+                }
+                OutlinedTextField(email, setEmail, label = { Text("Email address") }, leadingIcon = { Icon(Icons.Default.Email, null) },
+                    singleLine = true, modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(password, setPassword, label = { Text("Password") },
+                    trailingIcon = { IconButton(onClick = { showPassword = !showPassword }) {
+                        Icon(if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility, if (showPassword) "Hide password" else "Show password")
+                    } }, singleLine = true,
+                    visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+                Button(onClick = submit, enabled = !busy, modifier = Modifier.fillMaxWidth().height(52.dp), shape = RoundedCornerShape(15.dp)) {
+                    Text(if (busy) "Please wait…" else if (mode == "Sign in") "Continue" else "Create my account", fontSize = 15.sp)
+                }
+                Text(message, color = Muted, fontSize = 12.sp)
+            }
+            Spacer(Modifier.height(18.dp))
+            Text("A fair swap. A fresh start. No money involved.", color = Muted, fontSize = 11.sp)
         }
-        OutlinedTextField(email, setEmail, label = { Text("Email address") }, singleLine = true, modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(10.dp))
-        OutlinedTextField(password, setPassword, label = { Text("Password") }, singleLine = true, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
-        Spacer(Modifier.height(16.dp))
-        Button(onClick = submit, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text(if (busy) "Please wait…" else mode) }
-        Spacer(Modifier.height(12.dp))
-        Text(message, color = Muted, fontSize = 12.sp)
     }
 }
 
 @Composable
 private fun ProfileSetupScreen(name: String, setName: (String) -> Unit, teach: String, setTeach: (String) -> Unit, learn: String, setLearn: (String) -> Unit, about: String, setAbout: (String) -> Unit, busy: Boolean, message: String, save: () -> Unit, onSignOut: () -> Unit) {
-    Column(Modifier.fillMaxSize().background(BackgroundDark).padding(22.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("YOUR SKILL PROFILE", color = Color(0xFF9BC69A), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background).padding(22.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text("YOUR SKILL PROFILE", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
         Text("Let's get you started.", color = Cream, fontSize = 27.sp, fontWeight = FontWeight.Bold)
         Text("Tell the community what you can teach and what you'd like to learn.", color = Muted)
         OutlinedTextField(name, setName, label = { Text("Display name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
@@ -697,10 +848,10 @@ private fun DiscoverScreen(
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("SKILLSWAP AI", color = Color(0xFF9BC69A), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                    Text("SKILLSWAP AI", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                     Text("Hey, $name!", color = Cream, fontSize = 27.sp, fontWeight = FontWeight.Bold)
                 }
-                TextButton(onClick = onNotifications) { Text("Inbox", color = Color(0xFF9BC69A)) }
+                TextButton(onClick = onNotifications) { Text("Inbox", color = MaterialTheme.colorScheme.primary) }
                 IconButton(onClick = onAccount) { Icon(Icons.Default.AccountCircle, "Account", tint = Cream) }
             }
         }
@@ -712,7 +863,7 @@ private fun DiscoverScreen(
                 label = "hero-pulse"
             )
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp))
-                .background(Brush.linearGradient(listOf(ForestLight, Forest, Color(0xFF2B5C42))))
+                .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.secondary, Color(0xFF2B5C42))))
                 .padding(20.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
@@ -729,9 +880,9 @@ private fun DiscoverScreen(
         item { Row(verticalAlignment = Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text("Explore the community", color = Cream, fontSize = 19.sp, fontWeight = FontWeight.Bold); Text(message, color = Muted, fontSize = 11.sp) }; TextButton(onClick = onRefresh) { Text("Refresh") } } }
         if (members.isEmpty()) item { Text(if (busy) "Loading members…" else "No other profiles yet. Invite a friend to join SkillSwap!", color = Muted, modifier = Modifier.padding(12.dp)) }
         items(members, key = { it.id }) { member ->
-            Column(Modifier.fillMaxWidth().animateContentSize().clip(RoundedCornerShape(18.dp)).background(SurfaceDark).padding(16.dp)) {
+            Column(Modifier.fillMaxWidth().animateContentSize().clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp)) {
                 Text(member.name, color = Cream, fontWeight = FontWeight.Bold, fontSize = 17.sp)
-                Text("Can teach: ${member.teaches}", color = Color(0xFF9BC69A), fontSize = 13.sp)
+                Text("Can teach: ${member.teaches}", color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
                 Text("Wants to learn: ${member.learns}", color = Muted, fontSize = 13.sp)
                 if (member.about.isNotBlank()) Text(member.about, color = Muted, fontSize = 12.sp)
                 Spacer(Modifier.height(10.dp))
@@ -774,7 +925,8 @@ private fun DiscoverScreen(
 @Composable
 private fun SwapsScreen(
     modifier: Modifier, swaps: List<Swap>, userId: String, busy: Boolean, message: String,
-    onRespond: (String, String) -> Unit, onComplete: (String) -> Unit, onRefresh: () -> Unit
+    onRespond: (String, String) -> Unit, onComplete: (String) -> Unit, onRefresh: () -> Unit,
+    onCancel: (String) -> Unit
 ) {
     val incoming = swaps.filter { it.recipientId == userId && it.status == "pending" }
     val outgoing = swaps.filter { it.senderId == userId && it.status == "pending" }
@@ -784,7 +936,7 @@ private fun SwapsScreen(
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("YOUR SWAPS", color = Color(0xFF9BC69A), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                    Text("YOUR SWAPS", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                     Text("Swap hub", color = Cream, fontSize = 27.sp, fontWeight = FontWeight.Bold)
                 }
                 TextButton(onClick = onRefresh) { Text("Refresh") }
@@ -793,32 +945,33 @@ private fun SwapsScreen(
         }
         item { Text("Incoming requests · ${incoming.size}", color = Cream, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
         if (incoming.isEmpty()) item { Text("No new requests right now.", color = Muted, fontSize = 13.sp) }
-        items(incoming, key = { "in-${it.id}" }) { SwapCard(it, userId, busy, onRespond, onComplete) }
+        items(incoming, key = { "in-${it.id}" }) { SwapCard(it, userId, busy, onRespond, onComplete, onCancel) }
         item { Text("Sent by you · ${outgoing.size}", color = Cream, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
         if (outgoing.isEmpty()) item { Text("You haven't sent any pending requests.", color = Muted, fontSize = 13.sp) }
-        items(outgoing, key = { "out-${it.id}" }) { SwapCard(it, userId, busy, onRespond, onComplete) }
+        items(outgoing, key = { "out-${it.id}" }) { SwapCard(it, userId, busy, onRespond, onComplete, onCancel) }
         item { Text("Active swaps · ${active.size}", color = Cream, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
         if (active.isEmpty()) item { Text("Accepted swaps will appear here.", color = Muted, fontSize = 13.sp) }
-        items(active, key = { "active-${it.id}" }) { SwapCard(it, userId, busy, onRespond, onComplete) }
+        items(active, key = { "active-${it.id}" }) { SwapCard(it, userId, busy, onRespond, onComplete, onCancel) }
         item { Text("History · ${history.size}", color = Cream, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
         if (history.isEmpty()) item { Text("Completed and declined requests will appear here.", color = Muted, fontSize = 13.sp) }
-        items(history, key = { "history-${it.id}" }) { SwapCard(it, userId, busy, onRespond, onComplete) }
+        items(history, key = { "history-${it.id}" }) { SwapCard(it, userId, busy, onRespond, onComplete, onCancel) }
     }
 }
 
 @Composable
 private fun SwapCard(
     swap: Swap, userId: String, busy: Boolean,
-    onRespond: (String, String) -> Unit, onComplete: (String) -> Unit
+    onRespond: (String, String) -> Unit, onComplete: (String) -> Unit, onCancel: (String) -> Unit
 ) {
+    var confirmCancel by remember(swap.id) { mutableStateOf(false) }
     val sentByMe = swap.senderId == userId
     val partner = if (sentByMe) swap.recipientName else swap.senderName
     val myCompleted = if (sentByMe) swap.senderCompleted else swap.recipientCompleted
     val partnerCompleted = if (sentByMe) swap.recipientCompleted else swap.senderCompleted
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(SurfaceDark).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(partner, color = Cream, fontWeight = FontWeight.Bold, fontSize = 17.sp, modifier = Modifier.weight(1f))
-            Text(swap.status.replaceFirstChar { it.uppercase() }, color = Color(0xFF9BC69A), fontSize = 12.sp)
+            Text(swap.status.replaceFirstChar { it.uppercase() }, color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
         }
         Text("Skill to learn: ${swap.skill}", color = Cream, fontSize = 14.sp)
         Text(if (sentByMe) "You sent this request" else "They requested a swap with you", color = Muted, fontSize = 12.sp)
@@ -828,47 +981,139 @@ private fun SwapCard(
                     Button(onClick = { onRespond(swap.id, "accepted") }, enabled = !busy, modifier = Modifier.weight(1f)) { Text("Accept") }
                     OutlinedButton(onClick = { onRespond(swap.id, "declined") }, enabled = !busy, modifier = Modifier.weight(1f)) { Text("Decline") }
                 }
-            } else Text("Waiting for their response…", color = Muted, fontSize = 13.sp)
+            } else {
+                Text("Waiting for their response…", color = Muted, fontSize = 13.sp)
+                OutlinedButton(onClick = { confirmCancel = true }, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Cancel request") }
+            }
             "accepted" -> {
                 Text("Your completion: ${if (myCompleted) "done" else "not marked"} · Partner: ${if (partnerCompleted) "done" else "not marked"}", color = Muted, fontSize = 12.sp)
                 if (!myCompleted) Button(onClick = { onComplete(swap.id) }, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Mark my part complete") }
-                else Text(if (partnerCompleted) "Both marked complete!" else "Your part is saved. Waiting for your partner.", color = Color(0xFF9BC69A), fontSize = 12.sp)
+                else Text(if (partnerCompleted) "Both marked complete!" else "Your part is saved. Waiting for your partner.", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp)
             }
-            "completed" -> Text("Swap completed successfully.", color = Color(0xFF9BC69A), fontSize = 13.sp)
+            "completed" -> Text("Swap completed successfully.", color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
             "declined" -> Text("This request was declined.", color = Muted, fontSize = 13.sp)
         }
+    }
+    if (confirmCancel) {
+        AlertDialog(onDismissRequest = { confirmCancel = false }, title = { Text("Cancel this request?") },
+            text = { Text("The other member will no longer see it as pending. You can send a new request later.") },
+            confirmButton = { TextButton(onClick = { onCancel(swap.id); confirmCancel = false }) { Text("Cancel request") } },
+            dismissButton = { TextButton(onClick = { confirmCancel = false }) { Text("Keep it") } })
     }
 }
 
 @Composable
 private fun AccountScreen(
-    modifier: Modifier, name: String, email: String, teach: String, learn: String, about: String, message: String,
-    edit: () -> Unit, onPasswordChange: (String, String) -> Unit, onReplayTutorial: () -> Unit,
-    onSettings: () -> Unit, onBack: () -> Unit, signOut: () -> Unit
+    modifier: Modifier, name: String, email: String, teach: String, learn: String, about: String, avatar: String, message: String,
+    editAccount: () -> Unit, editSkills: () -> Unit, onPasswordChange: (String, String) -> Unit,
+    onReplayTutorial: () -> Unit, onSettings: () -> Unit, onBack: () -> Unit, signOut: () -> Unit
 ) {
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
     var showPasswords by remember { mutableStateOf(false) }
-    Column(modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        TextButton(onClick = onBack) { Text("‹ Back to Discover", color = Color(0xFF9BC69A)) }
-        Text(name, color = Cream, fontSize = 28.sp, fontWeight = FontWeight.Bold)
-        Text(email, color = Muted)
-        Text("I can teach: $teach", color = Cream)
-        Text("I want to learn: $learn", color = Cream)
-        if (about.isNotBlank()) Text(about, color = Muted)
-        Button(onClick = edit, modifier = Modifier.fillMaxWidth()) { Text("Edit profile") }
-        OutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) { Text("Customise app") }
-        Divider(color = ForestLight)
-        Text("CHANGE PASSWORD", color = Color(0xFF9BC69A), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
-        OutlinedTextField(currentPassword, { currentPassword = it }, label = { Text("Current password") }, singleLine = true,
-            visualTransformation = if (showPasswords) VisualTransformation.None else PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(newPassword, { newPassword = it }, label = { Text("New password (8+ characters)") }, singleLine = true,
-            visualTransformation = if (showPasswords) VisualTransformation.None else PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
-        TextButton(onClick = { showPasswords = !showPasswords }) { Text(if (showPasswords) "Hide passwords" else "Show passwords") }
-        Button(onClick = { onPasswordChange(currentPassword, newPassword) }, modifier = Modifier.fillMaxWidth()) { Text("Update password") }
-        OutlinedButton(onClick = onReplayTutorial, modifier = Modifier.fillMaxWidth()) { Text("Replay tutorial") }
+    var securityExpanded by remember { mutableStateOf(false) }
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        TextButton(onClick = onBack) { Text("‹ Back to Discover", color = MaterialTheme.colorScheme.primary) }
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+            Box(Modifier.size(68.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondary), contentAlignment = Alignment.Center) { Text(avatar, fontSize = 31.sp) }
+            Column(Modifier.weight(1f)) {
+                Text("YOUR ACCOUNT", color = MaterialTheme.colorScheme.primary, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                Text(name, color = Cream, fontSize = 26.sp, fontWeight = FontWeight.Bold)
+                Text(email, color = Muted, fontSize = 12.sp)
+            }
+            IconButton(onClick = editAccount) { Icon(Icons.Default.Edit, "Edit account", tint = MaterialTheme.colorScheme.primary) }
+        }
+        if (about.isNotBlank()) Text(about, color = Muted, fontSize = 13.sp,
+            modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface).padding(15.dp))
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) { Text("YOUR SKILL CARD", color = Cream, fontWeight = FontWeight.Bold, fontSize = 16.sp); Text("What you offer and what you want to learn.", color = Muted, fontSize = 11.sp) }
+                IconButton(onClick = editSkills) { Icon(Icons.Default.Edit, "Edit skill card", tint = MaterialTheme.colorScheme.primary) }
+            }
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Column(Modifier.weight(1f).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.background).padding(12.dp)) {
+                    Text("I CAN TEACH", color = MaterialTheme.colorScheme.primary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    Text(teach, color = Cream, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                }
+                Column(Modifier.weight(1f).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.background).padding(12.dp)) {
+                    Text("I WANT TO LEARN", color = MaterialTheme.colorScheme.primary, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                    Text(learn, color = Cream, fontSize = 14.sp, fontWeight = FontWeight.SemiBold)
+                }
+            }
+            OutlinedButton(onClick = editSkills, modifier = Modifier.fillMaxWidth()) { Text("Edit skill card") }
+        }
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("PERSONALISE", color = Cream, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+            OutlinedButton(onClick = editAccount, modifier = Modifier.fillMaxWidth()) { Text("Edit account details") }
+            OutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) { Text("Customise app appearance") }
+            OutlinedButton(onClick = onReplayTutorial, modifier = Modifier.fillMaxWidth()) { Text("Replay app tour") }
+        }
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            TextButton(onClick = { securityExpanded = !securityExpanded }) { Text(if (securityExpanded) "Hide security settings" else "Security · Change password", color = Cream) }
+            if (securityExpanded) {
+                OutlinedTextField(currentPassword, { currentPassword = it }, label = { Text("Current password") }, singleLine = true,
+                    visualTransformation = if (showPasswords) VisualTransformation.None else PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+                OutlinedTextField(newPassword, { newPassword = it }, label = { Text("New password (8+ characters)") }, singleLine = true,
+                    visualTransformation = if (showPasswords) VisualTransformation.None else PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+                TextButton(onClick = { showPasswords = !showPasswords }) { Text(if (showPasswords) "Hide passwords" else "Show passwords") }
+                Button(onClick = { onPasswordChange(currentPassword, newPassword) }, modifier = Modifier.fillMaxWidth()) { Text("Update password") }
+            }
+        }
         Text(message, color = Muted, fontSize = 12.sp)
         OutlinedButton(onClick = signOut, modifier = Modifier.fillMaxWidth()) { Text("Sign out") }
+    }
+}
+
+@Composable
+fun AccountDetailsEditorScreen(modifier: Modifier, name: String, about: String, avatar: String, busy: Boolean,
+    onSave: (String, String, String) -> Unit, onBack: () -> Unit) {
+    var nameInput by remember(name) { mutableStateOf(name) }
+    var aboutInput by remember(about) { mutableStateOf(about) }
+    var avatarInput by remember(avatar) { mutableStateOf(avatar) }
+    val avatars = listOf("🎓", "🎨", "💻", "🎮", "📚", "🌱", "🚀", "🎧")
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        TextButton(onClick = onBack) { Text("‹ Back to account", color = MaterialTheme.colorScheme.primary) }
+        Text("ACCOUNT DETAILS", color = MaterialTheme.colorScheme.primary, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+        Text("Make it yours.", color = Cream, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+        Text("Your name, avatar and short introduction live here.", color = Muted, fontSize = 13.sp)
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("CHOOSE AN AVATAR", color = Cream, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            avatars.chunked(4).forEach { group ->
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    group.forEach { choice ->
+                        TextButton(onClick = { avatarInput = choice }, modifier = Modifier.weight(1f).clip(RoundedCornerShape(12.dp))
+                            .background(if (avatarInput == choice) MaterialTheme.colorScheme.secondary else MaterialTheme.colorScheme.background)) { Text(choice, fontSize = 23.sp) }
+                    }
+                }
+            }
+            OutlinedTextField(nameInput, { if (it.length <= 40) nameInput = it }, label = { Text("Display name") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(aboutInput, { if (it.length <= 240) aboutInput = it }, label = { Text("About me") }, minLines = 3, maxLines = 5, modifier = Modifier.fillMaxWidth())
+        }
+        Button(onClick = { onSave(nameInput, aboutInput, avatarInput) }, enabled = !busy && nameInput.isNotBlank(), modifier = Modifier.fillMaxWidth().height(50.dp)) {
+            Text(if (busy) "Saving…" else "Save account details")
+        }
+    }
+}
+
+@Composable
+fun SkillCardEditorScreen(modifier: Modifier, teach: String, learn: String, busy: Boolean,
+    onSave: (String, String) -> Unit, onBack: () -> Unit) {
+    var teachInput by remember(teach) { mutableStateOf(teach) }
+    var learnInput by remember(learn) { mutableStateOf(learn) }
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        TextButton(onClick = onBack) { Text("‹ Back to account", color = MaterialTheme.colorScheme.primary) }
+        Text("SKILL CARD", color = MaterialTheme.colorScheme.primary, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+        Text("Tune your swap.", color = Cream, fontSize = 28.sp, fontWeight = FontWeight.Bold)
+        Text("These two skills power your matchmaking recommendations.", color = Muted, fontSize = 13.sp)
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedTextField(teachInput, { if (it.length <= 60) teachInput = it }, label = { Text("I can teach") },
+                supportingText = { Text("Be specific, e.g. beginner video editing") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(learnInput, { if (it.length <= 60) learnInput = it }, label = { Text("I want to learn") },
+                supportingText = { Text("e.g. logo design or basic coding") }, singleLine = true, modifier = Modifier.fillMaxWidth())
+        }
+        Button(onClick = { onSave(teachInput, learnInput) }, enabled = !busy && teachInput.isNotBlank() && learnInput.isNotBlank(), modifier = Modifier.fillMaxWidth().height(50.dp)) {
+            Text(if (busy) "Saving…" else "Save skill card")
+        }
     }
 }
 
