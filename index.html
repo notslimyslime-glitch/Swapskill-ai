@@ -598,9 +598,26 @@ body.room-open #roomPage .room-messages{flex:1 1 auto!important;min-height:0!imp
 body.room-open #roomPage .room-compose{position:relative!important;bottom:auto!important;flex:0 0 auto!important;margin:8px 0 0!important;padding:8px!important}
 body.room-open #roomPage .room-compose textarea{min-height:48px!important;max-height:90px!important;resize:none!important}
 @media(min-width:700px){body.room-open #roomPage{top:88px!important;padding-left:max(24px,calc((100vw - 760px)/2))!important;padding-right:max(24px,calc((100vw - 760px)/2))!important}}
+
+/* Android-only immersive Mission Room, desktop and iOS stay unchanged */
+@media (max-width: 700px){
+ html.android-device body.room-open{height:100%;min-height:100%;overflow:hidden!important}
+ html.android-device body.room-open .wrap{width:100%!important;max-width:none!important;height:100dvh!important;min-height:0!important;margin:0!important;padding:0!important;overflow:hidden!important}
+ html.android-device body.room-open .top{display:none!important}
+ html.android-device body.room-open .tabs{display:none!important}
+ html.android-device body.room-open #roomPage{display:block!important;position:fixed!important;z-index:999!important;inset:0!important;width:100vw!important;height:100dvh!important;max-width:none!important;margin:0!important;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)!important;overflow:hidden!important;background:#0b1710!important}
+ html.android-device body.room-open #roomPageContent{display:flex!important;flex-direction:column!important;width:100%!important;height:100%!important;min-height:0!important;max-height:100%!important;padding:0!important;overflow:hidden!important}
+ html.android-device body.room-open #roomPage .room-page-head{flex:0 0 auto!important;position:relative!important;top:auto!important;margin:0!important;padding:10px 14px!important;min-height:64px!important;background:#101d16!important;border-bottom:1px solid #294432!important}
+ html.android-device body.room-open #roomPage .mission-room{display:flex!important;flex:1 1 auto!important;flex-direction:column!important;min-height:0!important;height:auto!important;margin:0!important;padding:8px 10px calc(8px + env(safe-area-inset-bottom))!important;border:0!important;overflow:hidden!important}
+ html.android-device body.room-open #roomPage .room-note{flex:0 0 auto!important;margin:0 4px 8px!important;font-size:11px!important}
+ html.android-device body.room-open #roomPage .room-messages{display:flex!important;flex:1 1 auto!important;min-height:0!important;height:auto!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain!important;touch-action:pan-y!important;border:0!important;border-radius:0!important;padding:12px 6px!important}
+ html.android-device body.room-open #roomPage .room-compose{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;flex:0 0 auto!important;position:relative!important;inset:auto!important;margin:8px 0 0!important;padding:8px!important;gap:8px!important;background:#17251c!important;border:1px solid #314b38!important;border-radius:24px!important}
+ html.android-device body.room-open #roomPage .room-compose textarea{width:100%!important;min-height:48px!important;max-height:100px!important;resize:none!important;border:0!important;border-radius:18px!important;background:#0d1811!important;padding:12px 14px!important}
+ html.android-device body.room-open #roomPage .room-compose button{min-width:64px!important;min-height:48px!important;border-radius:18px!important}
+}
 </style>
 </head>
-<body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+<script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
  <div class="auth-gate-backdrop"></div>
  <section class="auth-gate-card">
   <div class="auth-gate-brand"><span class="auth-gate-mark">✳</span><span>Skill<span>Swap</span></span></div>
