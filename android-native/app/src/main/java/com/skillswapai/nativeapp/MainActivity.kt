@@ -66,7 +66,7 @@ private fun accentColor(choice: String): Color = when (choice) {
     "Ocean" -> Color(0xFF8BC7D8)
     "Violet" -> Color(0xFFC2A5F5)
     "Amber" -> Color(0xFFE5BD78)
-    else -> MaterialTheme.colorScheme.primary
+    else -> Color(0xFF9BC69A)
 }
 
 data class Member(val id: String, val name: String, val teaches: String, val learns: String, val about: String)
@@ -641,7 +641,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
 @Composable
 private fun AuthScreen(mode: String, setMode: (String) -> Unit, email: String, setEmail: (String) -> Unit, password: String, setPassword: (String) -> Unit, busy: Boolean, message: String, submit: () -> Unit) {
     Column(Modifier.fillMaxSize().background(BackgroundDark).padding(24.dp), verticalArrangement = Arrangement.Center) {
-        Text("SKILLSWAP AI", color = Color(0xFF9BC69A), fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+        Text("SKILLSWAP AI", color = MaterialTheme.colorScheme.primary, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
         Text("Learn. Share. Grow.", color = Cream, fontSize = 31.sp, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(10.dp))
         Text("Swap what you know for what you want to learn. No money, just teamwork.", color = Muted)
