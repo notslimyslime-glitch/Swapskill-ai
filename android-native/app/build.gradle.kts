@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.skillswapai.nativeapp"
+    namespace = "com.skillswapai.app"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.skillswapai.nativeapp"
+        applicationId = "com.skillswapai.app"
         minSdk = 24
         targetSdk = 35
         versionCode = 2
