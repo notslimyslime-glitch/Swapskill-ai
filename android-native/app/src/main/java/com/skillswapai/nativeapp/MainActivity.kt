@@ -18,6 +18,8 @@ import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -132,11 +134,54 @@ private fun SkillSwapApp(activity: ComponentActivity) {
     var messageDraft by remember { mutableStateOf("") }
     var leaderboard by remember { mutableStateOf<List<LeaderboardEntry>>(emptyList()) }
     var notifications by remember { mutableStateOf<List<AppNotification>>(emptyList()) }
+    var blockedIds by remember { mutableStateOf<Set<String>>(emptySet()) }
     var showTutorial by remember { mutableStateOf(!prefs.getBoolean("tutorial_done", false)) }
     var busy by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("Sign in to continue to SkillSwap.") }
     var needsProfile by remember { mutableStateOf(false) }
     var lastBackPress by remember { mutableLongStateOf(0L) }
+
+    fun loadBlockedMembers(token: String) {
+        val currentUser = userId ?: return
+        scope.launch {
+            try {
+                val blocked = withContext(Dispatchers.IO) {
+                    request("/rest/v1/member_blocks?select=blocked_id&blocker_id=eq.$currentUser", token = token).optJSONArray("data") ?: JSONArray()
+                }
+                blockedIds = (0 until blocked.length()).map { blocked.getJSONObject(it).optString("blocked_id") }.toSet()
+                loadMembers(token)
+            } catch (e: Exception) { message = e.message ?: "Could not load your block list." }
+        }
+    }
+
+    fun blockMember(member: Member) {
+        val token = accessToken ?: return
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    request("/rest/v1/member_blocks", "POST", token,
+                        JSONObject().put("blocker_id", userId).put("blocked_id", member.id), "return=minimal")
+                }
+                blockedIds = blockedIds + member.id
+                members = members.filterNot { it.id == member.id }
+                message = "Member blocked. They are hidden from Discover."
+            } catch (e: Exception) { message = e.message ?: "Could not block this member." }
+        }
+    }
+
+    fun reportMember(member: Member, reason: String, details: String) {
+        val token = accessToken ?: return
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    request("/rest/v1/member_reports", "POST", token,
+                        JSONObject().put("reporter_id", userId).put("reported_id", member.id)
+                            .put("reason", reason).put("details", details.trim()), "return=minimal")
+                }
+                message = "Report submitted. Thanks for helping keep SkillSwap safe."
+            } catch (e: Exception) { message = e.message ?: "Could not submit this report." }
+        }
+    }
 
     fun loadMembers(token: String) {
         scope.launch {
@@ -160,7 +205,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                         }
                     } finally { connection.disconnect() }
                 }
-                members = result.filter { it.id != userId }
+                members = result.filter { it.id != userId && it.id !in blockedIds }
                 message = "Connected · ${result.size} community profiles"
             } catch (e: Exception) { message = e.message ?: "Could not load members." }
             busy = false
@@ -413,7 +458,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                         about = profile.optString("about")
                         needsProfile = false
                         tab = "Discover"
-                        loadMembers(token)
+                        loadBlockedMembers(token)
                         loadSwaps(token)
                     }
                 } catch (e: Exception) { message = e.message ?: "Signed in, but profile loading failed." }
@@ -508,7 +553,8 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                         swaps.filter { (it.senderId == userId || it.recipientId == userId) && it.status in listOf("pending", "accepted") }
                             .map { if (it.senderId == userId) it.recipientId else it.senderId }.toSet(),
                         { tab = "Account" }, { loadMembers(accessToken!!) }, { sendSwapRequest(it) },
-                        { tab = "Notifications"; loadNotifications(accessToken!!) }
+                        { tab = "Notifications"; loadNotifications(accessToken!!) },
+                        { blockMember(it) }, { member, reason, details -> reportMember(member, reason, details) }
                     )
                     "Swaps" -> SwapsScreen(
                         Modifier.padding(padding), swaps, userId.orEmpty(), busy, message,
@@ -590,8 +636,13 @@ private fun ProfileSetupScreen(name: String, setName: (String) -> Unit, teach: S
 private fun DiscoverScreen(
     modifier: Modifier, name: String, members: List<Member>, busy: Boolean, message: String,
     requestedMemberIds: Set<String>, onAccount: () -> Unit, onRefresh: () -> Unit,
-    onRequestSwap: (String) -> Unit, onNotifications: () -> Unit
+    onRequestSwap: (String) -> Unit, onNotifications: () -> Unit,
+    onBlock: (Member) -> Unit, onReport: (Member, String, String) -> Unit
 ) {
+    var blockTarget by remember { mutableStateOf<Member?>(null) }
+    var reportTarget by remember { mutableStateOf<Member?>(null) }
+    var reportReason by remember { mutableStateOf("Inappropriate behaviour") }
+    var reportDetails by remember { mutableStateOf("") }
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -624,8 +675,35 @@ private fun DiscoverScreen(
                 Button(onClick = { onRequestSwap(member.id) }, enabled = !busy && !alreadyRequested, modifier = Modifier.fillMaxWidth()) {
                     Text(if (alreadyRequested) "Request sent / swap active" else "Request a skill swap")
                 }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
+                    TextButton(onClick = { blockTarget = member }) { Text("Block", color = Muted) }
+                    TextButton(onClick = { reportTarget = member; reportDetails = "" }) { Text("Report", color = Color(0xFFE2A18F)) }
+                }
             }
         }
+    }
+    blockTarget?.let { target ->
+        AlertDialog(onDismissRequest = { blockTarget = null }, title = { Text("Block this member?") },
+            text = { Text("They will be hidden from Discover and you cannot send them a new swap request.") },
+            confirmButton = { TextButton(onClick = { onBlock(target); blockTarget = null }) { Text("Block") } },
+            dismissButton = { TextButton(onClick = { blockTarget = null }) { Text("Cancel") } })
+    }
+    reportTarget?.let { target ->
+        AlertDialog(onDismissRequest = { reportTarget = null }, title = { Text("Report member") },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    listOf("Inappropriate behaviour", "Harassment or bullying", "Fake or misleading profile", "Unsafe request", "Other").forEach { reason ->
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            RadioButton(selected = reportReason == reason, onClick = { reportReason = reason })
+                            Text(reason, color = Cream, fontSize = 13.sp)
+                        }
+                    }
+                    OutlinedTextField(value = reportDetails, onValueChange = { if (it.length <= 500) reportDetails = it },
+                        label = { Text("Extra details (optional)") }, minLines = 2, maxLines = 4)
+                }
+            },
+            confirmButton = { TextButton(onClick = { onReport(target, reportReason, reportDetails); reportTarget = null }) { Text("Submit report") } },
+            dismissButton = { TextButton(onClick = { reportTarget = null }) { Text("Cancel") } })
     }
 }
 
