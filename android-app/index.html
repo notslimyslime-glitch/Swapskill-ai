@@ -171,6 +171,21 @@ button{min-height:42px;touch-action:manipulation}
 .leaderboard-sub{font-size:12px;color:var(--muted,#aab7ce);margin-top:3px}
 .leaderboard-xp{font-weight:850;color:#c8d0ff;white-space:nowrap}
 .leaderboard-note{font-size:12px;line-height:1.6;margin-top:15px}
+
+/* Podium styling for the top three */
+.leaderboard-row.rank-1{border-color:rgba(255,207,92,.72);background:linear-gradient(105deg,rgba(117,82,25,.38),rgba(35,39,52,.94) 72%);box-shadow:0 0 0 1px rgba(255,207,92,.12),0 9px 28px rgba(214,163,55,.12)}
+.leaderboard-row.rank-1 .leaderboard-place,.leaderboard-row.rank-1 .leaderboard-xp{color:#ffd66e}
+.leaderboard-row.rank-1 .leaderboard-name:after{content:"  👑";font-size:14px}
+.leaderboard-row.rank-2{border-color:rgba(202,216,235,.58);background:linear-gradient(105deg,rgba(112,133,158,.28),rgba(26,38,55,.94) 72%);box-shadow:0 7px 22px rgba(173,195,219,.07)}
+.leaderboard-row.rank-2 .leaderboard-place,.leaderboard-row.rank-2 .leaderboard-xp{color:#dce8f7}
+.leaderboard-row.rank-3{border-color:rgba(218,148,99,.58);background:linear-gradient(105deg,rgba(125,72,42,.3),rgba(37,31,35,.94) 72%);box-shadow:0 7px 22px rgba(190,112,68,.08)}
+.leaderboard-row.rank-3 .leaderboard-place,.leaderboard-row.rank-3 .leaderboard-xp{color:#eeb18a}
+.leaderboard-row.rank-1 .leaderboard-place,.leaderboard-row.rank-2 .leaderboard-place,.leaderboard-row.rank-3 .leaderboard-place{font-size:24px;text-shadow:0 2px 12px currentColor}
+.leaderboard-row.rank-1 .leaderboard-sub{color:#f2d48a}
+.leaderboard-row.rank-2 .leaderboard-sub{color:#c7d5e7}
+.leaderboard-row.rank-3 .leaderboard-sub{color:#e6b18f}
+.leaderboard-row.rank-1.me,.leaderboard-row.rank-2.me,.leaderboard-row.rank-3.me{outline:2px solid rgba(255,255,255,.18);outline-offset:2px}
+
 @media(max-width:600px){.leaderboard-hero{padding:22px 18px;border-radius:19px}.my-rank-card{align-items:flex-start;flex-direction:column}.leaderboard-row{grid-template-columns:36px minmax(0,1fr) auto;padding:12px 11px}.leaderboard-xp{font-size:13px}}
 </style>
 </head>
@@ -262,7 +277,7 @@ function renderLeaderboard(){
  const myRank=rows.filter(r=>scoreOf(r)>myScore).length+1;
  mine.innerHTML='<span><span class="muted">Your ranking</span><br><strong>'+(myScore>0?"#"+myRank:"Not ranked yet")+'</strong></span><strong>'+myScore+' XP</strong>';
  if(!rows.length||rows.every(r=>scoreOf(r)===0)){list.innerHTML='<div class="empty">No XP scores yet. Complete a swap with a partner to claim the first spot! 🏆</div>';return;}
- list.innerHTML=rows.slice(0,100).map((r,i)=>{const rank=1+rows.filter(other=>scoreOf(other)>scoreOf(r)).length;const medal=rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":"#"+rank;return '<div class="leaderboard-row '+(r.user_id===user.id?'me':'')+'"><div class="leaderboard-place">'+medal+'</div><div><div class="leaderboard-name">'+esc(r.display_name||"SkillSwap member")+(r.user_id===user.id?" · You":"")+'</div><div class="leaderboard-sub">'+(rank<=3?"Top performer":"SkillSwap learner & teacher")+'</div></div><div class="leaderboard-xp">'+scoreOf(r)+' XP</div></div>';}).join("");
+ list.innerHTML=rows.slice(0,100).map((r,i)=>{const rank=1+rows.filter(other=>scoreOf(other)>scoreOf(r)).length;const medal=rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":"#"+rank;const podium=rank<=3?" rank-"+rank:"";const label=rank===1?"🥇 #1 Champion":rank===2?"🥈 #2 Runner-up":rank===3?"🥉 #3 Rising star":"SkillSwap learner & teacher";return '<div class="leaderboard-row'+podium+' '+(r.user_id===user.id?'me':'')+'"><div class="leaderboard-place">'+medal+'</div><div><div class="leaderboard-name">'+esc(r.display_name||"SkillSwap member")+(r.user_id===user.id?" · You":"")+'</div><div class="leaderboard-sub">'+label+'</div></div><div class="leaderboard-xp">'+scoreOf(r)+' XP</div></div>';}).join("");
 }
 function renderPeople(){const q=document.getElementById("search").value.toLowerCase(),cat=document.getElementById("category").value;const src=user?people.filter(p=>p.id!==user.id).map(p=>({id:p.id,name:p.display_name,teach:p.teaches,learn:p.learns,cat:p.category,about:p.about,swapMode:p.swap_mode||"online",emoji:(p.display_name||"?")[0],score:profile.teach&&profile.learn?(norm(profile.teach)===norm(p.learns)&&norm(profile.learn)===norm(p.teaches)?100:norm(profile.teach)===norm(p.learns)||norm(profile.learn)===norm(p.teaches)?70:25):null})):demo.map(p=>({...p,id:"",score:null}));const list=src.filter(p=>(!q||(p.name+" "+p.teach+" "+p.learn).toLowerCase().includes(q))&&(!cat||p.cat===cat)&&(!document.getElementById("modeFilter").value||p.swapMode===document.getElementById("modeFilter").value||p.swapMode==="both"&&document.getElementById("modeFilter").value!=="both")).sort((a,b)=>(b.score??0)-(a.score??0));document.getElementById("people").innerHTML=list.map(p=>'<article class="card"><div class="person"><div class="avatar">'+esc(p.emoji)+'</div><div><h3>'+esc(p.name)+'</h3><div class="match">'+(p.score===null?"Demo / add your skills":p.score+"% match")+'</div></div></div><p>'+esc(p.about)+'</p><div class="muted">Can teach</div><span class="tag">'+esc(p.teach)+'</span><div class="muted">Wants to learn</div><span class="tag">'+esc(p.learn)+'</span><div class="muted">Swap mode</div><span class="tag">'+esc(({online:"Online live",async:"Async missions",in_person:"In-person",both:"Flexible"}[p.swapMode]||"Online live"))+'</span><button '+(!user||!p.id?'disabled':'')+' onclick="requestSwap(&quot;'+p.id+'&quot;)">'+(user?"Request a swap":"Sign in to request")+'</button></article>').join("")||'<div class="empty">No shared profiles yet. Add yours!</div>';}
 async function requestSwap(id){if(!user)return status("Sign in first.");const target=people.find(p=>p.id===id);if(!target)return;if(swaps.some(x=>x.sender_id===user.id&&x.recipient_id===id&&x.status==="pending"))return alert("You already have a pending request to "+target.display_name+".");const {error}=await db.from("swap_requests").insert({sender_id:user.id,recipient_id:id,skill:target.teaches});if(error)return alert("Could not send request: "+error.message);await loadCloud();showToast("Swap request sent!");}
