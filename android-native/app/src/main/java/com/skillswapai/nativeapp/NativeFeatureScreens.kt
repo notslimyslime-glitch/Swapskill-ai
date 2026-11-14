@@ -70,7 +70,7 @@ fun RoomsScreen(modifier: Modifier, swaps: List<Swap>, userId: String, onOpen: (
             val partner = if (mine) swap.recipientName else swap.senderName
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(SurfaceDark).padding(16.dp)) {
                 Text(partner, color = Cream, fontWeight = FontWeight.Bold, fontSize = 17.sp)
-                Text("Skill: \${swap.skill}", color = Color(0xFF9BC69A), fontSize = 13.sp)
+                Text("Skill: ${swap.skill}", color = Color(0xFF9BC69A), fontSize = 13.sp)
                 Text("Your private swap room", color = Muted, fontSize = 12.sp)
                 Spacer(Modifier.height(10.dp))
                 Button(onClick = { onOpen(swap) }, modifier = Modifier.fillMaxWidth()) { Text("Open room") }
@@ -94,7 +94,7 @@ fun MissionRoomScreen(
             Column(Modifier.weight(1f)) {
                 val partner = if (swap.senderId == userId) swap.recipientName else swap.senderName
                 Text(partner, color = Cream, fontWeight = FontWeight.Bold, fontSize = 17.sp)
-                Text("Mission Room · \${swap.skill}", color = Muted, fontSize = 11.sp)
+                Text("Mission Room · ${swap.skill}", color = Muted, fontSize = 11.sp)
             }
             IconButton(onClick = onRefresh) { Icon(Icons.Default.Refresh, "Refresh messages", tint = Cream) }
         }
@@ -148,7 +148,7 @@ fun LeaderboardScreen(modifier: Modifier, entries: List<LeaderboardEntry>, busy:
                     color = Cream, fontWeight = FontWeight.Bold, fontSize = if (highlight) 21.sp else 15.sp, modifier = Modifier.width(48.dp))
                 Text(entry.name, color = Cream, fontWeight = if (highlight) FontWeight.Bold else FontWeight.Medium,
                     fontSize = if (highlight) 17.sp else 15.sp, modifier = Modifier.weight(1f))
-                Text("\${entry.points} XP", color = Color(0xFFB9D6B2), fontWeight = FontWeight.Bold)
+                Text("${entry.points} XP", color = Color(0xFFB9D6B2), fontWeight = FontWeight.Bold)
             }
         }
     }
