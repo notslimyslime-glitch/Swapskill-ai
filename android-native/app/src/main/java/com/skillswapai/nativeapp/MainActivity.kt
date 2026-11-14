@@ -33,6 +33,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Explore
@@ -931,7 +932,7 @@ private fun SwapsScreen(
     val incoming = swaps.filter { it.recipientId == userId && it.status == "pending" }
     val outgoing = swaps.filter { it.senderId == userId && it.status == "pending" }
     val active = swaps.filter { it.status == "accepted" }
-    val history = swaps.filter { it.status == "declined" || it.status == "completed" }
+    val history = swaps.filter { it.status == "declined" || it.status == "completed" || it.status == "cancelled" }
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -992,6 +993,7 @@ private fun SwapCard(
             }
             "completed" -> Text("Swap completed successfully.", color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
             "declined" -> Text("This request was declined.", color = Muted, fontSize = 13.sp)
+            "cancelled" -> Text("You cancelled this request.", color = Muted, fontSize = 13.sp)
         }
     }
     if (confirmCancel) {
