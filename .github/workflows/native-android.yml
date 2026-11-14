@@ -1,5 +1,9 @@
 name: Build native SkillSwap AI Android APK
 
+concurrency:
+  group: native-android-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   workflow_dispatch:
   push:
