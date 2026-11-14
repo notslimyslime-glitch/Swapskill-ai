@@ -1,6 +1,8 @@
 package com.skillswapai.nativeapp
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -15,6 +17,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -38,7 +42,7 @@ data class AppNotification(val id: String, val type: String, val title: String, 
 fun TutorialScreen(onDone: () -> Unit) {
     Column(Modifier.fillMaxSize().background(BackgroundDark).padding(24.dp), verticalArrangement = Arrangement.Center) {
         Text("WELCOME TO", color = Muted, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
-        Text("SKILLSWAP AI", color = Color(0xFF9BC69A), fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
+        Text("SKILLSWAP AI", color = MaterialTheme.colorScheme.primary, fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
         Text("Created by Mayank & Harsh", color = Muted, fontSize = 12.sp)
         Spacer(Modifier.height(22.dp))
         TutorialStep("01", "Discover", "Find people who can teach the skill you want to learn.")
@@ -207,6 +211,86 @@ fun NotificationsScreen(modifier: Modifier, notifications: List<AppNotification>
         }
     }
 }
+
+
+@Composable
+fun SettingsScreen(
+    modifier: Modifier,
+    accentChoice: String,
+    onAccentChange: (String) -> Unit,
+    animationsEnabled: Boolean,
+    onAnimationsChange: (Boolean) -> Unit,
+    hapticsEnabled: Boolean,
+    onHapticsChange: (Boolean) -> Unit,
+    onBack: () -> Unit
+) {
+    val haptics = LocalHapticFeedback.current
+    Column(
+        modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp)
+    ) {
+        TextButton(onClick = onBack) { Text("‹ Back to account", color = MaterialTheme.colorScheme.primary) }
+        Text("MAKE IT YOURS", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp,
+            fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+        Text("App settings", color = Cream, fontSize = 29.sp, fontWeight = FontWeight.Bold)
+        Text("A few little switches to make SkillSwap feel like your space.", color = Muted, fontSize = 13.sp)
+
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(SurfaceDark).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text("ACCENT COLOUR", color = Cream, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            Text("Choose the highlight colour used across buttons and active controls.", color = Muted, fontSize = 12.sp)
+            listOf(
+                "Sage" to Color(0xFF9BC69A),
+                "Ocean" to Color(0xFF8BC7D8),
+                "Violet" to Color(0xFFC2A5F5),
+                "Amber" to Color(0xFFE5BD78)
+            ).forEach { (name, colour) ->
+                Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp))
+                    .background(if (accentChoice == name) Forest else Color.Transparent)
+                    .padding(horizontal = 8.dp, vertical = 3.dp),
+                    verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(selected = accentChoice == name, onClick = {
+                        onAccentChange(name)
+                        haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    })
+                    Box(Modifier.size(13.dp).clip(RoundedCornerShape(50)).background(colour))
+                    Spacer(Modifier.width(10.dp))
+                    Text(name, color = Cream, fontSize = 14.sp, modifier = Modifier.weight(1f))
+                    if (accentChoice == name) Text("SELECTED", color = MaterialTheme.colorScheme.primary,
+                        fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+
+        Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(SurfaceDark).padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("MOTION & FEEDBACK", color = Cream, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+            SettingsSwitchRow("Smooth transitions", "Animate movement between app sections.", animationsEnabled) {
+                onAnimationsChange(it)
+                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            }
+            HorizontalDivider(color = ForestLight)
+            SettingsSwitchRow("Haptic feedback", "Small vibration on navigation and setting changes.", hapticsEnabled) {
+                onHapticsChange(it)
+                haptics.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            }
+        }
+        Text("Your choices are saved on this device and stay after you close the app.", color = Muted, fontSize = 11.sp)
+        Spacer(Modifier.height(12.dp))
+    }
+}
+
+@Composable
+private fun SettingsSwitchRow(title: String, detail: String, checked: Boolean, onChange: (Boolean) -> Unit) {
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        Column(Modifier.weight(1f)) {
+            Text(title, color = Cream, fontWeight = FontWeight.SemiBold, fontSize = 14.sp)
+            Text(detail, color = Muted, fontSize = 11.sp)
+        }
+        Switch(checked = checked, onCheckedChange = onChange)
+    }
+}
+
 
 private const val REALTIME_URL = "wss://qmjmfjgqfmrrdlgmjksh.supabase.co/realtime/v1/websocket"
 private const val REALTIME_KEY = "sb_publishable_gOwrGejFZia29Yl8GlzI7A_RNenYsud"
