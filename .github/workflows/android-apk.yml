@@ -1,0 +1,76 @@
+name: Build SkillSwap Android APK
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Release version (example: v0.1.0)"
+        required: true
+        default: "v0.1.0"
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-android:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Prepare Capacitor project
+        run: |
+          mkdir -p www
+          cp index.html www/index.html
+          npm init -y
+          npm install @capacitor/core @capacitor/android
+          npm install --save-dev @capacitor/cli
+          cat > capacitor.config.json <<'EOF'
+          {
+            "appId": "com.skillswap.ai",
+            "appName": "SkillSwap AI",
+            "webDir": "www"
+          }
+          EOF
+          npx cap add android
+          npx cap sync android
+
+      - name: Build installable APK
+        run: |
+          cd android
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+      - name: Upload APK to workflow run
+        uses: actions/upload-artifact@v4
+        with:
+          name: SkillSwap-AI-Android-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Publish GitHub Release
+        if: github.event_name == 'push' || github.event.inputs.version != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.version || github.ref_name }}
+          name: SkillSwap AI ${{ github.event.inputs.version || github.ref_name }}
+          generate_release_notes: true
+          files: android/app/build/outputs/apk/debug/app-debug.apk
