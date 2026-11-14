@@ -236,13 +236,13 @@ private fun SkillSwapApp(activity: ComponentActivity) {
         scope.launch {
             try {
                 val result = withContext(Dispatchers.IO) {
-                    val data = request("/rest/v1/swap_messages?select=id,request_id,sender_id,body,created_at&request_id=eq.$requestId&order=created_at.asc&limit=50", token = token).optJSONArray("data") ?: JSONArray()
+                    val data = request("/rest/v1/swap_messages?select=id,request_id,sender_id,body,created_at&request_id=eq.$requestId&order=created_at.desc&limit=50", token = token).optJSONArray("data") ?: JSONArray()
                     (0 until data.length()).map { i ->
                         val item = data.getJSONObject(i)
                         RoomMessage(item.optString("id"), item.optString("request_id"), item.optString("sender_id"), item.optString("body"), item.optString("created_at"))
                     }
                 }
-                roomMessages = result
+                roomMessages = result.reversed()
             } catch (e: Exception) { message = e.message ?: "Could not load room messages." }
         }
     }
