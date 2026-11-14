@@ -535,6 +535,57 @@ footer{color:#819284!important}
  #roomPage .room-compose{bottom:12px}
  #account .account-hero{min-height:270px}
 }
+
+/* WhatsApp-inspired Mission Room DM interface */
+#chat .sectionhead h2{font-size:24px}
+#chat .sectionhead>span{font-size:12px}
+#chat .chat-list{gap:0;overflow:hidden;border:1px solid var(--line);border-radius:20px;background:#101a1d}
+#chat .chat-list-item{min-height:78px;padding:12px 15px;border:0;border-bottom:1px solid rgba(180,205,190,.10);border-radius:0;background:#101a1d;gap:13px}
+#chat .chat-list-item:last-child{border-bottom:0}
+#chat .chat-list-item:hover{transform:none;background:#182629;border-color:rgba(180,205,190,.10)}
+#chat .chat-list-item .avatar{width:50px;height:50px;flex:0 0 50px;border-radius:50%;background:linear-gradient(145deg,#4e8d69,#b1c8a0);color:#102018;font-size:18px}
+#chat .chat-list-copy strong{font-size:15px;color:#f2f5ef;font-weight:650}
+#chat .chat-preview{font-size:13px;color:#aab9b3;margin-top:5px}
+#chat .chat-meta{font-size:10px;color:#92a49b}
+#roomPage{position:relative;max-width:900px;margin:0 auto;padding:0 0 12px}
+#roomPageContent{height:calc(100dvh - 150px);min-height:480px;display:flex;flex-direction:column;overflow:hidden;border:1px solid rgba(159,190,174,.15);border-radius:18px;background:#0b1418;box-shadow:0 16px 45px rgba(0,0,0,.2)}
+#roomPage .room-page-head{flex:0 0 auto;display:flex;align-items:center;gap:12px;margin:0;padding:10px 13px;background:#172327;border:0;border-bottom:1px solid rgba(255,255,255,.06);position:relative;z-index:3}
+#roomPage .room-page-head button{width:36px;min-width:36px;height:40px;padding:0;margin:0;background:transparent!important;color:#e8f0eb!important;border:0!important;font-size:25px;box-shadow:none;display:grid;place-items:center}
+#roomPage .dm-avatar{width:43px;height:43px;flex:0 0 43px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(145deg,#67977a,#c0cba9);color:#102018;font-weight:750;font-size:16px}
+#roomPage .dm-person{min-width:0;flex:1}
+#roomPage .dm-person b{display:block;font-size:16px;font-weight:650;color:#f2f5ef;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#roomPage .dm-person .muted{font-size:11px;color:#a6b8af!important;margin-top:3px}
+#roomPage .dm-header-action{width:36px;height:40px;display:grid;place-items:center;color:#dce8e1;font-size:19px}
+#roomPage .mission-room{flex:1;min-height:0;display:flex;flex-direction:column;gap:0;margin:0;padding:0;border:0;border-radius:0;background:transparent;box-shadow:none}
+#roomPage .room-note{flex:0 0 auto;margin:8px auto;padding:6px 12px;max-width:92%;border:0;border-radius:9px;background:#263b37;color:#d4e0d8;font-size:10px;line-height:1.4;text-align:center}
+#roomPage .room-messages{position:relative;isolation:isolate;flex:1;min-height:0;max-height:none;display:flex;flex-direction:column;gap:7px;overflow-y:auto;padding:13px 12px 18px;border:0;border-radius:0;background-color:#0b171a;background-image:radial-gradient(circle at 20% 20%,rgba(111,149,130,.07) 0 2px,transparent 3px),radial-gradient(circle at 75% 65%,rgba(111,149,130,.06) 0 2px,transparent 3px),linear-gradient(135deg,transparent 48%,rgba(111,149,130,.035) 49% 51%,transparent 52%);background-size:34px 34px,47px 47px,42px 42px;overscroll-behavior:contain}
+#roomPage .room-messages:before{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;background:radial-gradient(ellipse at center,transparent 30%,rgba(0,0,0,.13))}
+#roomPage .room-message{width:fit-content;max-width:min(82%,520px);align-self:flex-start;padding:8px 10px 7px;border:0;border-radius:4px 14px 14px 14px;background:#202c30;color:#f1f5f2;box-shadow:0 1px 1px rgba(0,0,0,.16)}
+#roomPage .room-message.mine{align-self:flex-end;border-radius:14px 4px 14px 14px;background:#075c46;color:#f2f7f3}
+#roomPage .room-message small{display:none}
+#roomPage .room-message p{font-size:14px;line-height:1.4;color:inherit;white-space:pre-wrap;overflow-wrap:anywhere}
+#roomPage .room-message .dm-time{display:block;margin:4px 0 0;text-align:right;font-size:9px;line-height:1;color:rgba(231,242,235,.65)}
+#roomPage .room-message.mine .dm-time:after{content:"  ✓✓";color:#73c7e8;font-size:11px;letter-spacing:-2px}
+#roomPage .room-compose{flex:0 0 auto;position:relative;bottom:auto;z-index:4;display:grid;grid-template-columns:minmax(0,1fr) 52px;gap:8px;align-items:end;margin:0;padding:9px 10px calc(9px + env(safe-area-inset-bottom));border:0;border-top:1px solid rgba(255,255,255,.06);border-radius:0;background:#172327;box-shadow:0 -5px 18px rgba(0,0,0,.12)}
+#roomPage .room-compose textarea{width:100%;min-height:44px;max-height:110px;resize:none;padding:12px 15px;border:0;border-radius:24px;background:#263438;color:#f2f5f2;font-size:15px;line-height:1.35}
+#roomPage .room-compose textarea::placeholder{color:#a8b7b1}
+#roomPage .room-compose button{width:48px;min-width:48px;height:48px;min-height:48px;padding:0;border:0;border-radius:50%;background:#18b86b!important;color:#062718!important;font-size:0;box-shadow:none}
+#roomPage .room-compose button:before{content:"➤";font-size:21px;line-height:1}
+@media(max-width:700px){
+ #roomPage{margin:0 -10px;padding:0}
+ #roomPageContent{height:calc(100dvh - 145px - env(safe-area-inset-bottom));min-height:420px;border-left:0;border-right:0;border-radius:0}
+ #roomPage .room-page-head{padding:8px 12px}
+ #roomPage .room-messages{padding:12px 9px 16px}
+ #roomPage .room-message{max-width:86%;padding:8px 10px}
+ #roomPage .room-message p{font-size:14px}
+ #roomPage .room-compose{grid-template-columns:minmax(0,1fr) 48px;padding:8px 9px calc(8px + env(safe-area-inset-bottom))}
+ #roomPage .room-compose button{width:46px;min-width:46px;height:46px;min-height:46px}
+}
+@media(min-width:701px){
+ #roomPageContent{height:min(780px,calc(100dvh - 170px))}
+ #roomPage .room-messages{padding:18px 22px}
+ #roomPage .room-message{max-width:70%}
+}
 </style>
 </head>
 <body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
@@ -1065,7 +1116,7 @@ function selectChatRoom(id){
  const x=swaps.find(s=>s.id===id&&s.status==="accepted"&&!(s.sender_completed&&s.recipient_completed));if(!x)return;
  activeRoomId=id;const outgoing=x.sender_id===user.id,other=people.find(p=>p.id===(outgoing?x.recipient_id:x.sender_id));
  closeRoomChannels();
- document.getElementById("roomPageContent").innerHTML='<div class="room-page-head"><button class="decline" onclick="showTab(&quot;chat&quot;)">← Chats</button><div><b>'+esc(other?.display_name||"SkillSwap member")+'</b><div class="muted" style="font-size:12px">SkillSwap · '+esc(x.skill)+'</div></div></div><article id="missionRoom_'+id+'" class="card mission-room hidden"><div class="room-note">Private room for this swap. Keep phone numbers, addresses and social handles private.</div><div id="roomMessages_'+id+'" class="room-messages" aria-live="polite"></div><div class="room-compose"><textarea id="roomInput_'+id+'" maxlength="1000" placeholder="Message…"></textarea><button id="roomSend_'+id+'" onclick="sendRoomMessage(&quot;'+id+'&quot;)">Send</button></div></article>';
+ document.getElementById("roomPageContent").innerHTML='<div class="room-page-head"><button aria-label="Back to chats" onclick="showTab(&quot;chat&quot;)">‹</button><div class="dm-avatar">'+esc((other?.display_name||"S").slice(0,1).toUpperCase())+'</div><div class="dm-person"><b>'+esc(other?.display_name||"SkillSwap member")+'</b><div class="muted">SkillSwap · '+esc(x.skill)+'</div></div><span class="dm-header-action" aria-hidden="true">⋮</span></div><article id="missionRoom_'+id+'" class="mission-room"><div class="room-note">Private Mission Room · Keep personal contact details private</div><div id="roomMessages_'+id+'" class="room-messages" aria-live="polite"></div><div class="room-compose"><textarea id="roomInput_'+id+'" maxlength="1000" placeholder="Message…" onkeydown="if(event.key===&quot;Enter&quot;&amp;&amp;!event.shiftKey){event.preventDefault();sendRoomMessage(&quot;'+id+'&quot;)}"></textarea><button id="roomSend_'+id+'" aria-label="Send message" onclick="sendRoomMessage(&quot;'+id+'&quot;)">Send</button></div></article>';
  showTab("roomPage");openMissionRoom(id);
 }
 function missionRoomCreated(id){
