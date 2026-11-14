@@ -203,10 +203,16 @@ button{min-height:42px;touch-action:manipulation}
 .account-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:0 13px}.account-field{min-width:0}.account-field-wide{grid-column:1/-1}.account-field label span{font-size:10px;color:#8995aa;font-weight:500}.account-field textarea{min-height:85px;resize:vertical}.account-helper{font-size:10px;color:#8995aa;margin:6px 0 0;line-height:1.5}.account-save-row{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}.account-save-row p{font-size:11px;margin:0;line-height:1.5}.account-save-row button{width:auto;white-space:nowrap;padding:11px 15px}.account-save-row button span{padding-left:7px}
 @media(max-width:700px){#account{padding:8px 0 22px}.account-hero{padding:21px 18px 18px;border-radius:19px}.account-hero-top{align-items:flex-start}.account-kicker{font-size:9px}.account-status-pill{font-size:9px;padding:6px 8px}.account-identity{gap:12px;margin:22px 0 18px}.account-avatar{width:56px;height:56px;border-radius:18px;font-size:23px}.account-identity h1{font-size:25px}.account-identity p{font-size:11px;line-height:1.4}.account-skill-preview{grid-template-columns:1fr 32px 1fr;gap:7px;padding:12px}.account-skill-preview strong{font-size:12px}.account-swap-icon{width:29px;height:29px}.account-layout{grid-template-columns:1fr;gap:12px;margin-top:12px}.account-panel{padding:17px;border-radius:17px}.account-panel-heading h2{font-size:17px}.account-form-grid{grid-template-columns:1fr;gap:0}.account-field-wide{grid-column:auto}.account-save-row{align-items:stretch;flex-direction:column}.account-save-row button{width:100%}}
 
+
+/* Persistent profile shortcut */
+.top{display:flex;align-items:center;justify-content:space-between;gap:14px}
+.profile-shortcut{width:44px;height:44px;min-width:44px;padding:3px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(135deg,#7b83ff,#42d9c3);border:1px solid rgba(255,255,255,.32);box-shadow:0 5px 20px rgba(83,112,255,.28);color:#08121e}
+.profile-shortcut span{width:100%;height:100%;display:grid;place-items:center;border-radius:50%;background:#17243a;color:#f5f7ff;font-size:17px;font-weight:900}
+.profile-shortcut:focus-visible{outline:3px solid #42d9c3;outline-offset:3px}
 </style>
 </head>
 <body><main class="wrap">
-<header class="top"><div class="brand">Skill<span>Swap</span> ✳</div></header>
+<header class="top"><div class="brand">Skill<span>Swap</span> ✳</div><button class="profile-shortcut" type="button" onclick="showTab('account')" aria-label="Open your profile" title="Your profile"><span id="navProfileAvatar">S</span></button></header>
 <section class="account-hero">
  <div class="account-orbit account-orbit-one"></div><div class="account-orbit account-orbit-two"></div>
  <div class="account-hero-top"><span class="account-kicker">YOUR SPACE · YOUR SKILLS</span><span class="account-status-pill"><i></i> SkillSwap member</span></div>
@@ -243,7 +249,7 @@ button{min-height:42px;touch-action:manipulation}
 <button data-tab="chat" onclick="showTab('chat')"><span class="nav-icon">▤</span><span>Rooms</span></button>
 <button data-tab="leaderboard" onclick="showTab('leaderboard')"><span class="nav-icon">🏆</span><span>Board</span></button>
 <button data-tab="swaps" onclick="showTab('swaps')"><span class="nav-icon">⇄</span><span>My swaps</span></button>
-<button data-tab="account" onclick="showTab('account')"><span class="nav-icon">◉</span><span>Account</span></button>
+
 </nav>
 <section id="leaderboard" class="page hidden">
  <div class="leaderboard-hero">
@@ -290,7 +296,7 @@ function saveProfile(){profile={name:document.getElementById("name").value.trim(
 function updateAccountPreview(){
  const name=document.getElementById("name")?.value.trim(),teach=document.getElementById("teach")?.value.trim(),learn=document.getElementById("learn")?.value.trim();
  const avatar=document.getElementById("accountAvatar"),title=document.getElementById("accountName"),t=document.getElementById("accountTeach"),l=document.getElementById("accountLearn");
- if(avatar)avatar.textContent=(name||"S").charAt(0).toUpperCase();
+ if(avatar)avatar.textContent=(name||"S").charAt(0).toUpperCase();const navAvatar=document.getElementById("navProfileAvatar");if(navAvatar)navAvatar.textContent=(name||"S").charAt(0).toUpperCase();
  if(title)title.textContent=name||"Your profile";
  if(t)t.textContent=teach||"Add a skill";
  if(l)l.textContent=learn||"Pick a new skill";
