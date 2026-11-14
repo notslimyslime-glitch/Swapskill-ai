@@ -1,7 +1,10 @@
 package com.skillswapai.nativeapp
 
 import android.os.Bundle
+import android.os.SystemClock
+import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
@@ -131,6 +134,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
     var busy by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("Sign in to continue to SkillSwap.") }
     var needsProfile by remember { mutableStateOf(false) }
+    var lastBackPress by remember { mutableLongStateOf(0L) }
 
     fun loadMembers(token: String) {
         scope.launch {
@@ -396,6 +400,21 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                 message = "Please sign in to continue."
             }
             busy = false
+        }
+    }
+
+    BackHandler(enabled = true) {
+        when {
+            selectedRoom != null -> { selectedRoom = null; roomMessages = emptyList() }
+            accessToken != null && !needsProfile && !showTutorial && tab != "Discover" -> tab = "Discover"
+            else -> {
+                val now = SystemClock.elapsedRealtime()
+                if (now - lastBackPress <= 2200L) activity.finish()
+                else {
+                    lastBackPress = now
+                    Toast.makeText(activity, "Press back again to exit", Toast.LENGTH_SHORT).show()
+                }
+            }
         }
     }
 
