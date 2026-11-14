@@ -340,13 +340,16 @@ let previousTab="discover";
 function showTab(tab){if(tab!=="account"&&tab!=="roomPage"&&tab!=="notifications")previousTab=tab;document.body.classList.toggle("account-open",tab==="account");document.body.classList.toggle("notifications-open",tab==="notifications");const hideTabs=tab==="account"||tab==="notifications";document.querySelector(".tabs")?.classList.toggle("hidden",hideTabs);document.querySelectorAll(".page").forEach(x=>x.classList.toggle("hidden",x.id!==tab));document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===(tab==="roomPage"?"chat":tab)));if(tab==="activity")renderRequests();if(tab==="leaderboard")renderLeaderboard();if(tab==="swaps")renderSwaps();if(tab==="account")fillProfile();if(tab==="chat")renderChatPage();if(tab==="notifications")renderNotifications();history.replaceState(null,"",tab==="roomPage"?"#room-"+(activeRoomId||""):"#"+tab)}
 
 const tutorialSteps=[
- {title:"Welcome to SkillSwap ✳",description:"Learn something new by teaching something you already know. SkillSwap helps students exchange skills without money.",target:null},
- {title:"1. Build your skill profile",description:"Open your profile, add a display name, choose what you can teach and what you want to learn. Clear skills help matchmaking find better partners.",target:"account"},
- {title:"2. Discover your matches",description:"Browse members, search for skills and check match scores. When you find someone whose skills fit, send them a swap request.",target:"discover"},
- {title:"3. Manage requests",description:"Your incoming and outgoing requests live here. Accept a request to start a swap, or decline one you don't want.",target:"activity"},
- {title:"4. Start a Mission Room",description:"After a swap is accepted, create its Mission Room. Use the private chat to discuss goals, share tasks and plan your learning sessions.",target:"chat"},
- {title:"5. Track your swaps",description:"My Swaps shows active and completed exchanges. Make a plan, work through it together and both mark the swap complete when you're done.",target:"swaps"},
- {title:"6. Climb the leaderboard",description:"Completed swaps earn XP for both members. The leaderboard celebrates learning and helping others. That's the tour. Go make a skill exchange!",target:"leaderboard"}
+ {title:"Welcome to SkillSwap ✳",description:"SkillSwap AI is a student skill-exchange community. Teach something you know, learn something new, and swap skills without paying money.",target:null},
+ {title:"1. Create your profile",description:"Add your display name, what you can teach, what you want to learn, a short intro and category. Pick an avatar and add skill tags to help others find you.",target:"account"},
+ {title:"2. Discover people and matches",description:"Browse student profiles, search by skill, filter by category or swap mode, and check match scores. Open profiles and find someone whose skills fit yours.",target:"discover"},
+ {title:"3. Send and manage requests",description:"Send a swap request when you find a good match. Incoming and outgoing requests appear in Requests. Accept to start a swap or decline if it isn't right for you.",target:"activity"},
+ {title:"4. Keep up with notifications",description:"Your notification centre brings together request updates, acceptances, Mission Room messages and swap-completion alerts. Check it for new activity.",target:"notifications"},
+ {title:"5. Start a Mission Room",description:"Once a request is accepted, create its Mission Room. Each swap gets a private chat where both students can discuss the exchange and coordinate their learning.",target:"chat"},
+ {title:"6. Plan and complete your swap",description:"In My Swaps, set a learning goal, choose a session time, add tasks and track progress. Both students mark their part complete when the exchange is finished.",target:"swaps"},
+ {title:"7. Earn XP and climb the leaderboard",description:"Completed swaps award XP to both participants. Check weekly and all-time rankings and celebrate students who teach and learn.",target:"leaderboard"},
+ {title:"8. Use the safety tools",description:"You can report or block a member, and unblock them later from your profile. Blocking prevents new swap requests between you. Keep personal details private and meet in public with a trusted adult aware.",target:"account"},
+ {title:"Made by students, for students ❤️",description:"SkillSwap AI is built by Mayank, Founder, and Harsh, Co-founder. Thanks for being part of the first version. Now go make your first skill swap!",target:null}
 ];
 let tutorialIndex=0;
 function renderTutorial(){
