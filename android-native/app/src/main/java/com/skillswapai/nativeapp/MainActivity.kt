@@ -32,6 +32,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.json.JSONArray
 import org.json.JSONObject
+import org.json.JSONTokener
 import java.net.HttpURLConnection
 import java.net.URL
 
@@ -45,6 +46,11 @@ private val SurfaceDark = Color(0xFF1C2921)
 private val BackgroundDark = Color(0xFF101812)
 
 data class Member(val id: String, val name: String, val teaches: String, val learns: String, val about: String)
+data class Swap(
+    val id: String, val senderId: String, val recipientId: String, val skill: String,
+    val status: String, val senderCompleted: Boolean, val recipientCompleted: Boolean,
+    val senderName: String, val recipientName: String
+)
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -81,7 +87,8 @@ private fun request(path: String, method: String = "GET", token: String? = null,
         val code = connection.responseCode
         val stream = if (code in 200..299) connection.inputStream else connection.errorStream
         val text = stream?.bufferedReader()?.use { it.readText() }.orEmpty()
-        val json = if (text.isBlank()) JSONObject() else JSONObject(text)
+        val parsed: Any = if (text.isBlank()) JSONObject() else JSONTokener(text).nextValue()
+        val json = if (parsed is JSONObject) parsed else JSONObject().put("data", parsed)
         if (code !in 200..299) {
             val message = json.optString("msg").ifBlank { json.optString("message") }
                 .ifBlank { json.optString("error_description") }
@@ -113,6 +120,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
     var learns by remember { mutableStateOf("") }
     var about by remember { mutableStateOf("") }
     var members by remember { mutableStateOf<List<Member>>(emptyList()) }
+    var swaps by remember { mutableStateOf<List<Swap>>(emptyList()) }
     var busy by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("Sign in to continue to SkillSwap.") }
     var needsProfile by remember { mutableStateOf(false) }
@@ -142,6 +150,76 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                 members = result.filter { it.id != userId }
                 message = "Connected · ${result.size} community profiles"
             } catch (e: Exception) { message = e.message ?: "Could not load members." }
+            busy = false
+        }
+    }
+
+    fun loadSwaps(token: String) {
+        val currentUser = userId ?: return
+        scope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    val query = "/rest/v1/swap_requests?select=id,sender_id,recipient_id,skill,status,sender_completed,recipient_completed,sender:profiles!swap_requests_sender_id_fkey(display_name),recipient:profiles!swap_requests_recipient_id_fkey(display_name)&or=(sender_id.eq.$currentUser,recipient_id.eq.$currentUser)&order=created_at.desc"
+                    val data = request(query, token = token).optJSONArray("data") ?: JSONArray()
+                    (0 until data.length()).map { i ->
+                        val item = data.getJSONObject(i)
+                        Swap(
+                            id = item.optString("id"), senderId = item.optString("sender_id"),
+                            recipientId = item.optString("recipient_id"), skill = item.optString("skill"),
+                            status = item.optString("status"), senderCompleted = item.optBoolean("sender_completed"),
+                            recipientCompleted = item.optBoolean("recipient_completed"),
+                            senderName = item.optJSONObject("sender")?.optString("display_name").orEmpty().ifBlank { "Member" },
+                            recipientName = item.optJSONObject("recipient")?.optString("display_name").orEmpty().ifBlank { "Member" }
+                        )
+                    }
+                }
+                swaps = result
+            } catch (e: Exception) { message = e.message ?: "Could not load your swaps." }
+        }
+    }
+
+    fun sendSwapRequest(recipientId: String) {
+        val token = accessToken ?: return
+        scope.launch {
+            busy = true
+            try {
+                withContext(Dispatchers.IO) {
+                    request("/rest/v1/rpc/create_swap_request", "POST", token, JSONObject().put("p_recipient_id", recipientId))
+                }
+                message = "Swap request sent!"
+                loadSwaps(token)
+            } catch (e: Exception) { message = e.message ?: "Could not send swap request." }
+            busy = false
+        }
+    }
+
+    fun respondToSwap(requestId: String, status: String) {
+        val token = accessToken ?: return
+        scope.launch {
+            busy = true
+            try {
+                withContext(Dispatchers.IO) {
+                    request("/rest/v1/rpc/respond_to_swap_request", "POST", token,
+                        JSONObject().put("p_request_id", requestId).put("p_status", status))
+                }
+                message = if (status == "accepted") "Swap accepted. You're matched!" else "Request declined."
+                loadSwaps(token)
+            } catch (e: Exception) { message = e.message ?: "Could not update this request." }
+            busy = false
+        }
+    }
+
+    fun markSwapComplete(requestId: String) {
+        val token = accessToken ?: return
+        scope.launch {
+            busy = true
+            try {
+                withContext(Dispatchers.IO) {
+                    request("/rest/v1/rpc/mark_swap_complete", "POST", token, JSONObject().put("p_request_id", requestId))
+                }
+                message = "Your progress has been saved."
+                loadSwaps(token)
+            } catch (e: Exception) { message = e.message ?: "Could not update swap progress." }
             busy = false
         }
     }
@@ -180,6 +258,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                         needsProfile = false
                         tab = "Discover"
                         loadMembers(token)
+                        loadSwaps(token)
                     }
                 } catch (e: Exception) { message = e.message ?: "Signed in, but profile loading failed." }
                 busy = false
@@ -225,7 +304,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                 else scope.launch {
                     busy = true
                     try {
-                        val body = JSONObject().put("id", userId).put("display_name", displayName.trim()).put("teaches", teaches.trim()).put("learns", learns.trim()).put("category", "General").put("about", about.trim()).put("swap_mode", "online").put("avatar_emoji", "🎓").put("skills_tags", JSONArray())
+                        val body = JSONObject().put("id", userId).put("display_name", displayName.trim()).put("teaches", teaches.trim()).put("learns", learns.trim()).put("category", "Creative").put("about", about.trim()).put("swap_mode", "online").put("avatar_emoji", "🎓").put("skills_tags", JSONArray())
                         withContext(Dispatchers.IO) { request("/rest/v1/profiles?on_conflict=id", "POST", accessToken, body, "resolution=merge-duplicates,return=representation") }
                         needsProfile = false
                         message = "Profile saved!"
@@ -244,7 +323,17 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                 }
             }) { padding ->
                 when (tab) {
-                    "Discover" -> DiscoverScreen(Modifier.padding(padding), displayName, members, busy, message, { tab = "Account" }, { loadMembers(accessToken!!) })
+                    "Discover" -> DiscoverScreen(
+                        Modifier.padding(padding), displayName, members, busy, message,
+                        swaps.filter { it.senderId == userId && it.status in listOf("pending", "accepted") }.map { it.recipientId }.toSet(),
+                        { tab = "Account" }, { loadMembers(accessToken!!) }, { sendSwapRequest(it) }
+                    )
+                    "Swaps" -> SwapsScreen(
+                        Modifier.padding(padding), swaps, userId.orEmpty(), busy, message,
+                        { id, status -> respondToSwap(id, status) },
+                        { id -> markSwapComplete(id) },
+                        { accessToken?.let { loadSwaps(it) } }
+                    )
                     "Account" -> AccountScreen(Modifier.padding(padding), displayName, email, teaches, learns, about, message, { needsProfile = true }, { prefs.edit().remove("refresh_token").apply(); accessToken = null; userId = null; members = emptyList(); tab = "Discover"; message = "Signed out." })
                     else -> PlaceholderScreen(tab, Modifier.padding(padding))
                 }
@@ -291,7 +380,11 @@ private fun ProfileSetupScreen(name: String, setName: (String) -> Unit, teach: S
 }
 
 @Composable
-private fun DiscoverScreen(modifier: Modifier, name: String, members: List<Member>, busy: Boolean, message: String, onAccount: () -> Unit, onRefresh: () -> Unit) {
+private fun DiscoverScreen(
+    modifier: Modifier, name: String, members: List<Member>, busy: Boolean, message: String,
+    requestedMemberIds: Set<String>, onAccount: () -> Unit, onRefresh: () -> Unit,
+    onRequestSwap: (String) -> Unit
+) {
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -318,7 +411,81 @@ private fun DiscoverScreen(modifier: Modifier, name: String, members: List<Membe
                 Text("Can teach: ${member.teaches}", color = Color(0xFF9BC69A), fontSize = 13.sp)
                 Text("Wants to learn: ${member.learns}", color = Muted, fontSize = 13.sp)
                 if (member.about.isNotBlank()) Text(member.about, color = Muted, fontSize = 12.sp)
+                Spacer(Modifier.height(10.dp))
+                val alreadyRequested = member.id in requestedMemberIds
+                Button(onClick = { onRequestSwap(member.id) }, enabled = !busy && !alreadyRequested, modifier = Modifier.fillMaxWidth()) {
+                    Text(if (alreadyRequested) "Request sent / swap active" else "Request a skill swap")
+                }
             }
+        }
+    }
+}
+
+@Composable
+private fun SwapsScreen(
+    modifier: Modifier, swaps: List<Swap>, userId: String, busy: Boolean, message: String,
+    onRespond: (String, String) -> Unit, onComplete: (String) -> Unit, onRefresh: () -> Unit
+) {
+    val incoming = swaps.filter { it.recipientId == userId && it.status == "pending" }
+    val outgoing = swaps.filter { it.senderId == userId && it.status == "pending" }
+    val active = swaps.filter { it.status == "accepted" }
+    val history = swaps.filter { it.status == "declined" || it.status == "completed" }
+    LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("YOUR SWAPS", color = Color(0xFF9BC69A), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+                    Text("Swap hub", color = Cream, fontSize = 27.sp, fontWeight = FontWeight.Bold)
+                }
+                TextButton(onClick = onRefresh) { Text("Refresh") }
+            }
+            Text(message, color = Muted, fontSize = 12.sp)
+        }
+        item { Text("Incoming requests · ${incoming.size}", color = Cream, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+        if (incoming.isEmpty()) item { Text("No new requests right now.", color = Muted, fontSize = 13.sp) }
+        items(incoming, key = { "in-${it.id}" }) { SwapCard(it, userId, busy, onRespond, onComplete) }
+        item { Text("Sent by you · ${outgoing.size}", color = Cream, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+        if (outgoing.isEmpty()) item { Text("You haven't sent any pending requests.", color = Muted, fontSize = 13.sp) }
+        items(outgoing, key = { "out-${it.id}" }) { SwapCard(it, userId, busy, onRespond, onComplete) }
+        item { Text("Active swaps · ${active.size}", color = Cream, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+        if (active.isEmpty()) item { Text("Accepted swaps will appear here.", color = Muted, fontSize = 13.sp) }
+        items(active, key = { "active-${it.id}" }) { SwapCard(it, userId, busy, onRespond, onComplete) }
+        item { Text("History · ${history.size}", color = Cream, fontSize = 18.sp, fontWeight = FontWeight.Bold) }
+        if (history.isEmpty()) item { Text("Completed and declined requests will appear here.", color = Muted, fontSize = 13.sp) }
+        items(history, key = { "history-${it.id}" }) { SwapCard(it, userId, busy, onRespond, onComplete) }
+    }
+}
+
+@Composable
+private fun SwapCard(
+    swap: Swap, userId: String, busy: Boolean,
+    onRespond: (String, String) -> Unit, onComplete: (String) -> Unit
+) {
+    val sentByMe = swap.senderId == userId
+    val partner = if (sentByMe) swap.recipientName else swap.senderName
+    val myCompleted = if (sentByMe) swap.senderCompleted else swap.recipientCompleted
+    val partnerCompleted = if (sentByMe) swap.recipientCompleted else swap.senderCompleted
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(SurfaceDark).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text(partner, color = Cream, fontWeight = FontWeight.Bold, fontSize = 17.sp, modifier = Modifier.weight(1f))
+            Text(swap.status.replaceFirstChar { it.uppercase() }, color = Color(0xFF9BC69A), fontSize = 12.sp)
+        }
+        Text("Skill to learn: ${swap.skill}", color = Cream, fontSize = 14.sp)
+        Text(if (sentByMe) "You sent this request" else "They requested a swap with you", color = Muted, fontSize = 12.sp)
+        when (swap.status) {
+            "pending" -> if (!sentByMe) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Button(onClick = { onRespond(swap.id, "accepted") }, enabled = !busy, modifier = Modifier.weight(1f)) { Text("Accept") }
+                    OutlinedButton(onClick = { onRespond(swap.id, "declined") }, enabled = !busy, modifier = Modifier.weight(1f)) { Text("Decline") }
+                }
+            } else Text("Waiting for their response…", color = Muted, fontSize = 13.sp)
+            "accepted" -> {
+                Text("Your completion: ${if (myCompleted) "done" else "not marked"} · Partner: ${if (partnerCompleted) "done" else "not marked"}", color = Muted, fontSize = 12.sp)
+                if (!myCompleted) Button(onClick = { onComplete(swap.id) }, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Mark my part complete") }
+                else Text(if (partnerCompleted) "Both marked complete!" else "Your part is saved. Waiting for your partner.", color = Color(0xFF9BC69A), fontSize = 12.sp)
+            }
+            "completed" -> Text("Swap completed successfully.", color = Color(0xFF9BC69A), fontSize = 13.sp)
+            "declined" -> Text("This request was declined.", color = Muted, fontSize = 13.sp)
         }
     }
 }
