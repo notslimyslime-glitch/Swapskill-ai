@@ -247,10 +247,12 @@ body.account-open .tabs{display:none!important}
 
 .avatar-picker{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 4px}.avatar-choice{width:42px;height:42px;border:1px solid var(--line);border-radius:13px;background:var(--panel);font-size:22px;cursor:pointer}.avatar-choice.active{border-color:#8a83ff;background:rgba(124,116,255,.2);box-shadow:0 0 0 2px rgba(124,116,255,.16)}.profile-skill-tags{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 12px}.profile-skill-tags .tag{margin:0}.avatar-field{margin:0 0 15px}
 .member-safety-actions{display:flex;gap:8px;margin-top:10px}.member-safety-actions button{padding:7px 10px;font-size:11px;border:1px solid var(--line);border-radius:10px;background:var(--panel);color:var(--muted)}.member-safety-actions button:hover{color:var(--text);background:var(--panel2)}.blocked-members{margin-top:18px;padding-top:14px;border-top:1px solid var(--line)}.blocked-members h3{font-size:13px;margin:0 0 8px}.blocked-member-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}.blocked-member-row button{border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--text);padding:6px 9px;font-size:11px}
+
+.tutorial-overlay{position:fixed;inset:0;z-index:10050;background:#070a12d9;backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:18px}.tutorial-overlay.open{display:flex}.tutorial-card{width:min(100%,480px);background:linear-gradient(145deg,#20283a,#121824);border:1px solid #46506a;border-radius:24px;padding:24px;box-shadow:0 24px 80px #000a;position:relative}.tutorial-kicker{color:var(--b);font-size:11px;font-weight:900;letter-spacing:2px;text-transform:uppercase}.tutorial-card h2{font-size:27px;line-height:1.15;margin:10px 0}.tutorial-card p{color:var(--muted);margin:0;min-height:74px}.tutorial-progress{display:flex;gap:6px;margin:20px 0}.tutorial-progress span{height:5px;flex:1;border-radius:9px;background:#3a4357}.tutorial-progress span.active{background:linear-gradient(90deg,var(--a),var(--b))}.tutorial-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.tutorial-actions button{margin:0}.tutorial-actions .tutorial-quiet{background:#30394b;color:#d7deed}.tutorial-actions .tutorial-open{background:transparent;border:1px solid #58627b;color:#dce2f2}.tutorial-help{background:#252d40;color:#d9ddf2;padding:9px 12px;border:1px solid var(--line)}@media(max-width:520px){.tutorial-card{padding:20px}.tutorial-card h2{font-size:24px}.tutorial-actions{display:grid;grid-template-columns:1fr 1fr}.tutorial-actions .tutorial-open{grid-column:1/-1;grid-row:1}}
 </style>
 </head>
 <body><main class="wrap">
-<header class="top"><div class="brand">Skill<span>Swap</span> ✳</div><div class="top-actions"><button class="notification-shortcut" type="button" onclick="showTab('notifications')" aria-label="Open notifications" title="Notifications">🔔<span id="notificationBadge" class="notification-badge hidden">0</span></button><button class="profile-shortcut" type="button" onclick="showTab('account')" aria-label="Open your profile" title="Your profile"><span id="navProfileAvatar">S</span></button></div></header>
+<header class="top"><div class="brand">Skill<span>Swap</span> ✳</div><div class="top-actions"><button class="tutorial-help" type="button" onclick="openTutorial()" aria-label="Open tutorial" title="How SkillSwap works">?</button><button class="notification-shortcut" type="button" onclick="showTab('notifications')" aria-label="Open notifications" title="Notifications">🔔<span id="notificationBadge" class="notification-badge hidden">0</span></button><button class="profile-shortcut" type="button" onclick="showTab('account')" aria-label="Open your profile" title="Your profile"><span id="navProfileAvatar">S</span></button></div></header>
 <section id="account" class="page hidden">
 <button class="account-back" type="button" onclick="showTab(previousTab || 'discover')" aria-label="Go back" title="Back">←</button>
 <section class="account-hero">
@@ -298,7 +300,10 @@ body.account-open .tabs{display:none!important}
  </section>
 </div>
 </section>
-<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<div id="tutorialOverlay" class="tutorial-overlay" role="dialog" aria-modal="true" aria-labelledby="tutorialTitle" aria-describedby="tutorialDescription">
+ <div class="tutorial-card"><div class="tutorial-kicker" id="tutorialKicker">QUICK TOUR · 1 OF 7</div><h2 id="tutorialTitle">Welcome to SkillSwap ✳</h2><p id="tutorialDescription">Learn something new by teaching something you already know. No money needed.</p><div class="tutorial-progress" id="tutorialProgress"><span class="active"></span><span></span><span></span><span></span><span></span><span></span><span></span></div><div class="tutorial-actions"><button type="button" class="tutorial-quiet" id="tutorialSkip" onclick="skipTutorial()">Skip tour</button><button type="button" class="tutorial-open" id="tutorialOpen" onclick="openTutorialSection()">Show this section ↗</button><button type="button" id="tutorialNext" onclick="nextTutorial()">Next →</button></div></div>
+ </div>
+ <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <nav class="tabs app-bottom-nav" aria-label="Main navigation">
 <button class="active" data-tab="discover" onclick="showTab('discover')"><span class="nav-icon">⌕</span><span>Discover</span></button>
 <button data-tab="activity" onclick="showTab('activity')"><span class="nav-icon">↗</span><span>Requests</span></button>
@@ -358,6 +363,33 @@ let requests=JSON.parse(localStorage.getItem("ss_requests")||"[]");
 function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 let previousTab="discover";
 function showTab(tab){if(tab!=="account"&&tab!=="roomPage"&&tab!=="notifications")previousTab=tab;document.body.classList.toggle("account-open",tab==="account");document.body.classList.toggle("notifications-open",tab==="notifications");const hideTabs=tab==="account"||tab==="notifications";document.querySelector(".tabs")?.classList.toggle("hidden",hideTabs);document.querySelectorAll(".page").forEach(x=>x.classList.toggle("hidden",x.id!==tab));document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===(tab==="roomPage"?"chat":tab)));if(tab==="activity")renderRequests();if(tab==="leaderboard")renderLeaderboard();if(tab==="swaps")renderSwaps();if(tab==="account")fillProfile();if(tab==="chat")renderChatPage();if(tab==="notifications")renderNotifications();history.replaceState(null,"",tab==="roomPage"?"#room-"+(activeRoomId||""):"#"+tab)}
+
+const tutorialSteps=[
+ {title:"Welcome to SkillSwap ✳",description:"Learn something new by teaching something you already know. SkillSwap helps students exchange skills without money.",target:null},
+ {title:"1. Build your skill profile",description:"Open your profile, add a display name, choose what you can teach and what you want to learn. Clear skills help matchmaking find better partners.",target:"account"},
+ {title:"2. Discover your matches",description:"Browse members, search for skills and check match scores. When you find someone whose skills fit, send them a swap request.",target:"discover"},
+ {title:"3. Manage requests",description:"Your incoming and outgoing requests live here. Accept a request to start a swap, or decline one you don't want.",target:"activity"},
+ {title:"4. Start a Mission Room",description:"After a swap is accepted, create its Mission Room. Use the private chat to discuss goals, share tasks and plan your learning sessions.",target:"chat"},
+ {title:"5. Track your swaps",description:"My Swaps shows active and completed exchanges. Make a plan, work through it together and both mark the swap complete when you're done.",target:"swaps"},
+ {title:"6. Climb the leaderboard",description:"Completed swaps earn XP for both members. The leaderboard celebrates learning and helping others. That's the tour. Go make a skill exchange!",target:"leaderboard"}
+];
+let tutorialIndex=0;
+function renderTutorial(){
+ const s=tutorialSteps[tutorialIndex];if(!s)return;
+ document.getElementById("tutorialKicker").textContent="QUICK TOUR · "+(tutorialIndex+1)+" OF "+tutorialSteps.length;
+ document.getElementById("tutorialTitle").textContent=s.title;
+ document.getElementById("tutorialDescription").textContent=s.description;
+ document.getElementById("tutorialProgress").innerHTML=tutorialSteps.map((_,i)=>'<span class="'+(i<=tutorialIndex?'active':'')+'"></span>').join("");
+ document.getElementById("tutorialNext").textContent=tutorialIndex===tutorialSteps.length-1?"Let's go! ✓":"Next →";
+ document.getElementById("tutorialSkip").textContent=tutorialIndex===tutorialSteps.length-1?"Close tour":"Skip tour";
+ document.getElementById("tutorialOpen").classList.toggle("hidden",!s.target);
+}
+function openTutorial(){tutorialIndex=0;renderTutorial();document.getElementById("tutorialOverlay").classList.add("open")}
+function nextTutorial(){if(tutorialIndex<tutorialSteps.length-1){tutorialIndex++;renderTutorial()}else finishTutorial()}
+function skipTutorial(){finishTutorial()}
+function finishTutorial(){localStorage.setItem("ss_tutorial_completed_v1","1");document.getElementById("tutorialOverlay").classList.remove("open")}
+function openTutorialSection(){const target=tutorialSteps[tutorialIndex]?.target;if(target)showTab(target)}
+
 function norm(s){return String(s||"").trim().toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/\\s+/g," ")}
 function getMatch(p){if(!profile.teach||!profile.learn)return {score:null,label:"Add your skills for a match"};let canTeach=norm(profile.teach)===norm(p.learn),canLearn=norm(profile.learn)===norm(p.teach);return {score:canTeach&&canLearn?100:canTeach||canLearn?70:25,label:canTeach&&canLearn?"Perfect two-way swap":canTeach||canLearn?"One-way skill match":"Explore this skill"}}
 function requestSwap(name,skill){if(requests.some(r=>r.name===name)){alert("You've already requested a swap with "+name+" in this demo.");return}requests.unshift({name,skill,status:"Pending"});localStorage.setItem("ss_requests",JSON.stringify(requests));updateStats();alert("Demo request sent!");}
@@ -686,5 +718,6 @@ function renderSwaps(){
 db.auth.onAuthStateChange((_e,s)=>{user=s?.user||null;if(!user){closeRoomChannels();closeNotificationChannel();notifications=[];renderNotificationBadge();renderNotifications();}syncAuthPanel();if(user)setTimeout(loadCloud,0);else{people=[];swaps=[];renderPeople();renderRequests();renderSwaps();renderChatPage();}});
 const initialPage=location.hash.slice(1);if(initialPage.startsWith("room-"))showTab("chat");else showTab(["discover","activity","chat","leaderboard","swaps","account","notifications"].includes(initialPage)?initialPage:"discover");
 loadCloud();
+if(!localStorage.getItem("ss_tutorial_completed_v1"))setTimeout(openTutorial,650);
 
 </script></body></html>
