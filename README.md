@@ -2,9 +2,6 @@
 
 A phone-friendly prototype for a student skill-exchange community.
 
-## Run it
-Open `index.html` in a browser, or enable GitHub Pages in repository settings to publish it.
-
 ## Demo features
 - Discover sample student profiles and filter by skill/category.
 - Create a local skill profile.
