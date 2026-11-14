@@ -274,9 +274,56 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .tutorial-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .tutorial-actions button{min-width:0;min-height:44px}
 @media(max-width:520px){.tutorial-actions{grid-template-columns:1fr 1fr}}
+
+/* Clean mobile-first welcome and authentication screen */
+.auth-gate{position:fixed;inset:0;z-index:20000;display:flex;align-items:center;justify-content:center;padding:22px 18px;background:#f4f1e8;color:#173d2b;overflow-y:auto}
+.auth-gate.hidden{display:none}
+.auth-gate-backdrop{position:absolute;inset:0;background:radial-gradient(ellipse at 10% 5%,#d8e5d8 0,transparent 45%),radial-gradient(ellipse at 100% 100%,#c5d9c9 0,transparent 48%),#f4f1e8}
+.auth-gate-card{position:relative;width:min(100%,440px);min-height:min(680px,calc(100dvh - 36px));display:flex;flex-direction:column;overflow:hidden;border-radius:32px;background:rgba(255,255,255,.94);box-shadow:0 22px 70px rgba(28,62,42,.15);border:1px solid rgba(39,91,59,.12)}
+.auth-gate-brand{display:flex;align-items:center;gap:10px;padding:22px 24px;font-size:20px;font-weight:850;letter-spacing:-.7px;color:#183d2a}
+.auth-gate-brand>span:last-child>span{color:#39845a}
+.auth-gate-mark{display:grid;place-items:center;width:40px;height:40px;border-radius:14px;background:linear-gradient(145deg,#d5e9d9,#a8cfb1);color:#23633d;font-size:25px}
+.auth-gate-leaf{position:absolute;top:76px;right:-24px;width:190px;height:190px;border-radius:70% 0 70% 0;transform:rotate(35deg);background:radial-gradient(ellipse at 35% 35%,#4f9464,#174a31 75%);opacity:.12;font-size:0}
+.auth-gate-content{position:relative;padding:34px 28px 26px;margin:auto 0}
+.auth-gate-eyebrow{font-size:10px;letter-spacing:2px;font-weight:850;color:#548165;margin:0 0 12px}
+.auth-gate-content h1{font-size:clamp(30px,8vw,39px);line-height:1.08;letter-spacing:-1.5px;color:#173d2b;margin:0 0 12px;max-width:330px}
+.auth-gate-subtitle{font-size:14px;line-height:1.6;color:#738276;margin:0 0 28px;max-width:330px}
+.auth-gate-tabs{display:grid;grid-template-columns:1fr 1fr;padding:4px;border-radius:14px;background:#edf3ed;margin-bottom:22px}
+.auth-gate-tabs button{border:0;background:transparent;color:#64806b;border-radius:11px;padding:11px 8px;font-size:13px;font-weight:750}
+.auth-gate-tabs button.active{background:#fff;color:#24613c;box-shadow:0 2px 9px #1c4c3214}
+.welcome-auth-form{display:grid;gap:9px}
+.welcome-auth-form label{font-size:12px;font-weight:750;color:#45634e;margin-top:4px}
+.welcome-auth-form input{width:100%;min-height:52px;border:1px solid #dce8dd;border-radius:14px;background:#f2f6f1;color:#1c3827;padding:0 15px;font-size:15px;outline:none}
+.welcome-auth-form input:focus{border-color:#55936a;box-shadow:0 0 0 3px #55936a20}
+.auth-gate-submit{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:54px;margin-top:12px;padding:0 18px;border:0;border-radius:16px;background:#287449;color:#fff;font-weight:800;font-size:15px;box-shadow:0 8px 18px #28744928}
+.auth-gate-submit span{font-size:21px}
+.auth-gate-status{min-height:20px;margin:13px 0 0;color:#67806c;font-size:12px;text-align:center}
+.auth-gate-footnote{font-size:10px;line-height:1.5;color:#9aa99b;text-align:center;margin:22px 0 0}
+@media(max-height:650px){.auth-gate-card{min-height:0}.auth-gate-content{padding-top:20px;padding-bottom:20px}.auth-gate-subtitle{margin-bottom:18px}.auth-gate-footnote{margin-top:12px}}
+@media(min-width:700px){.auth-gate-card{min-height:650px}.auth-gate-content{padding-left:42px;padding-right:42px}}
 </style>
 </head>
-<body><main class="wrap">
+<body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
+ <div class="auth-gate-backdrop"></div>
+ <section class="auth-gate-card">
+  <div class="auth-gate-brand"><span class="auth-gate-mark">✳</span><span>Skill<span>Swap</span></span></div>
+  <div class="auth-gate-leaf" aria-hidden="true">✦</div>
+  <div class="auth-gate-content">
+   <p class="auth-gate-eyebrow">LEARN TOGETHER. GROW TOGETHER.</p>
+   <h1 id="welcomeTitle">Your next skill starts here.</h1>
+   <p class="auth-gate-subtitle">Swap what you know for what you want to learn. No money, just teamwork.</p>
+   <div class="auth-gate-tabs"><button type="button" id="welcomeSignInTab" class="active" onclick="setWelcomeAuthMode('signin')">Sign in</button><button type="button" id="welcomeSignUpTab" onclick="setWelcomeAuthMode('signup')">Create account</button></div>
+   <form class="welcome-auth-form" onsubmit="event.preventDefault();welcomeAuthMode==='signup'?signUp():signIn();">
+    <label for="welcomeEmail">Email address</label><input id="welcomeEmail" type="email" autocomplete="email" placeholder="you@example.com" required>
+    <label for="welcomePassword">Password</label><input id="welcomePassword" type="password" autocomplete="current-password" placeholder="At least 8 characters" minlength="8" required>
+    <button class="auth-gate-submit" id="welcomeSubmit" type="submit">Sign in <span>→</span></button>
+   </form>
+   <p id="welcomeAuthStatus" class="auth-gate-status" aria-live="polite">Sign in to continue to SkillSwap.</p>
+   <p class="auth-gate-footnote">By continuing, you agree to keep your account details private and treat other members respectfully.</p>
+  </div>
+ </section>
+</div>
+<main class="wrap">
 <header class="top"><div class="brand">Skill<span>Swap</span> ✳</div><div class="top-actions"><button class="tutorial-help" type="button" onclick="openTutorial()" aria-label="Open tutorial" title="How SkillSwap works">?</button><button class="notification-shortcut" type="button" onclick="showTab('notifications')" aria-label="Open notifications" title="Notifications"><svg class="ui-icon ui-bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span id="notificationBadge" class="notification-badge hidden">0</span></button><button class="profile-shortcut" type="button" onclick="showTab('account')" aria-label="Open your profile" title="Your profile"><span id="navProfileAvatar">S</span></button></div></header>
 <section id="account" class="page hidden">
 <button class="account-back" type="button" onclick="showTab(previousTab || 'discover')" aria-label="Go back" title="Back"><svg class="ui-icon ui-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h11"/></svg></button>
@@ -479,8 +526,8 @@ const db=window.supabase.createClient("https://qmjmfjgqfmrrdlgmjksh.supabase.co"
 let user=null, people=[], swaps=[], plans=[], leaderboardRows=[], leaderboardPeriod="all";
 let notifications=[],notificationChannel=null,blockedIds=[];
 fillProfile();updateStats();renderRequests();
-const status=m=>{const el=document.getElementById("authStatus");if(!el)return;el.textContent=m;let retry=document.getElementById("authRetryButton");if(String(m).startsWith("Could not load")){if(!retry){retry=document.createElement("button");retry.id="authRetryButton";retry.type="button";retry.className="retry-button";retry.textContent="Try again";retry.onclick=()=>loadCloud();el.insertAdjacentElement("afterend",retry);}}else if(retry)retry.remove();};
-function syncAuthPanel(){document.getElementById("authPanel").classList.toggle("hidden",!!user);document.getElementById("signedInPanel").classList.toggle("hidden",!user);}
+const status=m=>{const el=document.getElementById("authStatus"),welcome=document.getElementById("welcomeAuthStatus");if(el)el.textContent=m;if(welcome)welcome.textContent=m;let retry=document.getElementById("authRetryButton");if(String(m).startsWith("Could not load")){if(!retry){retry=document.createElement("button");retry.id="authRetryButton";retry.type="button";retry.className="retry-button";retry.textContent="Try again";retry.onclick=()=>loadCloud();el.insertAdjacentElement("afterend",retry);}}else if(retry)retry.remove();};
+function syncAuthPanel(){document.getElementById("authPanel").classList.toggle("hidden",!!user);document.getElementById("signedInPanel").classList.toggle("hidden",!user);const gate=document.getElementById("authGate");if(gate)gate.classList.toggle("hidden",!!user);}
 let toastTimer;function showToast(message){const el=document.getElementById("toast");el.textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),3200);}
 
 function notificationMatchesVisibleScreen(n){
@@ -566,8 +613,11 @@ async function openNotification(id){
  }
 }
 
-async function signUp(){const email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPassword").value,buttons=document.querySelectorAll(".account-auth-actions button");if(!email||password.length<8)return status("Enter an email and a password of at least 8 characters.");buttons.forEach(b=>b.disabled=true);status("Creating your account…");try{const {data,error}=await db.auth.signUp({email,password});if(error){status(error.message);showToast("Could not create account: "+error.message);return;}if(data.session){status("Account created successfully.");showToast("🎉 Account created successfully!");await loadCloud();}else{status("Account created. Check your email to confirm, then sign in.");showToast("🎉 Account created! Check your email to confirm it.");}}catch(e){status("Account creation couldn't finish. Check your connection and try again.");}finally{buttons.forEach(b=>b.disabled=false);}}
-async function signIn(){const email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPassword").value,buttons=document.querySelectorAll(".account-auth-actions button");if(!email||!password){status("Enter your email and password.");return;}buttons.forEach(b=>b.disabled=true);status("Signing in…");try{const {error}=await db.auth.signInWithPassword({email,password});if(error){status(error.message);showToast("Sign in failed: "+error.message);return;}showToast("✅ Sign in successful!");await loadCloud();}catch(e){status("Sign in couldn't finish. Check your connection and try again.");showToast("Connection problem. Please try again.");}finally{buttons.forEach(b=>b.disabled=false);}}
+let welcomeAuthMode="signin";
+function setWelcomeAuthMode(mode){welcomeAuthMode=mode==="signup"?"signup":"signin";document.getElementById("welcomeSignInTab")?.classList.toggle("active",welcomeAuthMode==="signin");document.getElementById("welcomeSignUpTab")?.classList.toggle("active",welcomeAuthMode==="signup");const submit=document.getElementById("welcomeSubmit"),password=document.getElementById("welcomePassword");if(submit)submit.innerHTML=welcomeAuthMode==="signup"?'Create account <span>→</span>':'Sign in <span>→</span>';if(password)password.autocomplete=welcomeAuthMode==="signup"?"new-password":"current-password";const status=document.getElementById("welcomeAuthStatus");if(status)status.textContent=welcomeAuthMode==="signup"?"Create an account to start swapping skills.":"Sign in to continue to SkillSwap.";}
+function authField(primary,fallback){return document.getElementById(primary)?.value??document.getElementById(fallback)?.value??"";}
+async function signUp(){const email=authField("welcomeEmail","authEmail").trim(),password=authField("welcomePassword","authPassword"),buttons=document.querySelectorAll(".account-auth-actions button");if(!email||password.length<8)return status("Enter an email and a password of at least 8 characters.");buttons.forEach(b=>b.disabled=true);status("Creating your account…");try{const {data,error}=await db.auth.signUp({email,password});if(error){status(error.message);showToast("Could not create account: "+error.message);return;}if(data.session){status("Account created successfully.");showToast("🎉 Account created successfully!");await loadCloud();}else{status("Account created. Check your email to confirm, then sign in.");showToast("🎉 Account created! Check your email to confirm it.");}}catch(e){status("Account creation couldn't finish. Check your connection and try again.");}finally{buttons.forEach(b=>b.disabled=false);}}
+async function signIn(){const email=authField("welcomeEmail","authEmail").trim(),password=authField("welcomePassword","authPassword"),buttons=document.querySelectorAll(".account-auth-actions button");if(!email||!password){status("Enter your email and password.");return;}buttons.forEach(b=>b.disabled=true);status("Signing in…");try{const {error}=await db.auth.signInWithPassword({email,password});if(error){status(error.message);showToast("Sign in failed: "+error.message);return;}showToast("✅ Sign in successful!");await loadCloud();}catch(e){status("Sign in couldn't finish. Check your connection and try again.");showToast("Connection problem. Please try again.");}finally{buttons.forEach(b=>b.disabled=false);}}
 function togglePasswordVisibility(inputId,button){const input=document.getElementById(inputId);if(!input||!button)return;const show=input.type==="password";input.type=show?"text":"password";button.textContent=show?"🙈":"👁";button.setAttribute("aria-label",(show?"Hide ":"Show ")+(inputId==="currentAccountPassword"?"current":"new")+" password");button.title=show?"Hide password":"Show password";}
 async function changeAccountPassword(){
  if(!user){showToast("Sign in first.");return;}
@@ -822,6 +872,6 @@ function renderSwaps(){
 db.auth.onAuthStateChange((_e,s)=>{user=s?.user||null;if(!user){closeRoomChannels();closeNotificationChannel();notifications=[];renderNotificationBadge();renderNotifications();}syncAuthPanel();if(user)setTimeout(loadCloud,0);else{people=[];swaps=[];renderPeople();renderRequests();renderSwaps();renderChatPage();}});
 const initialPage=location.hash.slice(1);if(initialPage.startsWith("room-"))showTab("chat");else showTab(["discover","activity","chat","leaderboard","swaps","account","notifications"].includes(initialPage)?initialPage:"discover");
 loadCloud();
-if(!localStorage.getItem("ss_tutorial_completed_v1"))setTimeout(openTutorial,650);
+if(user&&!localStorage.getItem("ss_tutorial_completed_v1"))setTimeout(openTutorial,650);
 
 </script></body></html>
