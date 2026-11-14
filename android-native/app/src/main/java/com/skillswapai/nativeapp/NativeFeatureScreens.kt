@@ -1,5 +1,11 @@
 package com.skillswapai.nativeapp
 
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -16,7 +22,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
@@ -83,7 +91,7 @@ fun RoomsScreen(modifier: Modifier, swaps: List<Swap>, userId: String, onOpen: (
         items(active, key = { it.id }) { swap ->
             val mine = swap.senderId == userId
             val partner = if (mine) swap.recipientName else swap.senderName
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(SurfaceDark).padding(16.dp)) {
+            Column(Modifier.fillMaxWidth().animateContentSize().clip(RoundedCornerShape(18.dp)).background(SurfaceDark).padding(16.dp)) {
                 Text(partner, color = Cream, fontWeight = FontWeight.Bold, fontSize = 17.sp)
                 Text("Skill: ${swap.skill}", color = Color(0xFF9BC69A), fontSize = 13.sp)
                 Text("Your private swap room", color = Muted, fontSize = 12.sp)
