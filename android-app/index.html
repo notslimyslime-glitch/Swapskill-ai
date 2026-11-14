@@ -651,8 +651,8 @@ function renderSwaps(){
  active.innerHTML=activeRows.length?activeRows.map(card).join(""):'<div class="empty">No active swaps yet. Accept a request to start one!</div>';
  done.innerHTML=doneRows.length?doneRows.map(card).join(""):'<div class="empty">Your completed swaps will appear here.</div>';
 }
-db.auth.onAuthStateChange((_e,s)=>{user=s?.user||null;if(!user)closeRoomChannels();syncAuthPanel();if(user)setTimeout(loadCloud,0);else{people=[];swaps=[];renderPeople();renderRequests();renderSwaps();renderChatPage();}});
-const initialPage=location.hash.slice(1);if(initialPage.startsWith("room-"))showTab("chat");else showTab(["discover","activity","chat","leaderboard","swaps","account"].includes(initialPage)?initialPage:"discover");
+db.auth.onAuthStateChange((_e,s)=>{user=s?.user||null;if(!user){closeRoomChannels();closeNotificationChannel();notifications=[];renderNotificationBadge();renderNotifications();}syncAuthPanel();if(user)setTimeout(loadCloud,0);else{people=[];swaps=[];renderPeople();renderRequests();renderSwaps();renderChatPage();}});
+const initialPage=location.hash.slice(1);if(initialPage.startsWith("room-"))showTab("chat");else showTab(["discover","activity","chat","leaderboard","swaps","account","notifications"].includes(initialPage)?initialPage:"discover");
 loadCloud();
 
 </script></body></html>
