@@ -136,6 +136,35 @@ footer{border-top:1px solid rgba(130,155,190,.13);margin-top:45px;padding-top:25
 .profile-shortcut span{width:100%;height:100%;display:grid;place-items:center;border-radius:50%;background:#17243a;color:#f5f7ff;font-size:17px;font-weight:900}
 .profile-shortcut:focus-visible{outline:3px solid #42d9c3;outline-offset:3px}
 
+.top-actions{display:flex;align-items:center;gap:10px}
+.notification-shortcut{position:relative;width:44px;height:44px;min-width:44px;display:grid;place-items:center;border:1px solid var(--line);border-radius:50%;background:var(--panel);color:var(--text);font-size:20px}
+.notification-shortcut:hover{background:var(--panel2)}
+.notification-badge{position:absolute;right:-3px;top:-4px;min-width:18px;height:18px;padding:0 5px;display:grid;place-items:center;border-radius:999px;background:#ff5d76;color:white;font-size:10px;font-weight:900;border:2px solid var(--bg)}
+.notification-badge.hidden{display:none}
+body.notifications-open .tabs{display:none!important}
+body.notifications-open .notification-shortcut{display:none}
+.notification-back{display:grid;place-items:center;width:42px;height:42px;padding:0;margin:0 0 16px;border:1px solid var(--line);border-radius:50%;background:var(--panel);color:var(--text);font-size:25px;line-height:1}
+.notification-hero{padding:26px;border:1px solid var(--line);border-radius:24px;background:radial-gradient(circle at 90% 0%,rgba(123,131,255,.18),transparent 38%),var(--panel);margin-bottom:18px}
+.notification-hero .eyebrow{color:var(--muted);font-size:11px;font-weight:800;letter-spacing:.16em}
+.notification-hero h1{margin:8px 0;font-size:clamp(28px,5vw,38px)}
+.notification-hero p{margin:0;color:var(--muted)}
+.notification-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0}
+.notification-toolbar button{padding:9px 13px;border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--text);font-weight:700}
+.notification-list{display:grid;gap:10px}
+.notification-item{width:100%;display:flex;align-items:flex-start;gap:13px;text-align:left;padding:16px;border:1px solid var(--line);border-radius:18px;background:var(--panel);color:var(--text);cursor:pointer}
+.notification-item:hover{border-color:rgba(123,131,255,.6);transform:translateY(-1px)}
+.notification-item.read{opacity:.72}
+.notification-icon{width:42px;height:42px;min-width:42px;display:grid;place-items:center;border-radius:14px;background:rgba(123,131,255,.13);font-size:20px}
+.notification-copy{min-width:0;flex:1}
+.notification-copy strong{display:block;margin:1px 0 4px}
+.notification-copy p{margin:0;color:var(--muted);font-size:13px;line-height:1.5}
+.notification-copy small{display:block;margin-top:7px;color:var(--muted);font-size:11px}
+.notification-unread-dot{width:9px;height:9px;min-width:9px;margin:7px 2px 0;border-radius:50%;background:#55d6bd}
+.notification-item.read .notification-unread-dot{visibility:hidden}
+.notification-empty{padding:30px 18px;text-align:center;border:1px dashed var(--line);border-radius:18px;color:var(--muted)}
+@media(max-width:600px){.top-actions{gap:7px}.notification-shortcut{width:40px;height:40px;min-width:40px}.notification-hero{padding:21px}.notification-item{padding:13px;gap:10px}.notification-toolbar{align-items:flex-start}}
+
+
 /* Account page uses a focused header with a back arrow */
 .account-back{display:grid;place-items:center;width:42px;height:42px;padding:0;margin:0 0 16px;border:1px solid var(--line);border-radius:50%;background:var(--panel);color:var(--text);font-size:25px;line-height:1}
 .account-back:hover{background:var(--panel2)}
@@ -144,7 +173,7 @@ body.account-open .tabs{display:none!important}
 </style>
 </head>
 <body><main class="wrap">
-<header class="top"><div class="brand">Skill<span>Swap</span> ✳</div><button class="profile-shortcut" type="button" onclick="showTab('account')" aria-label="Open your profile" title="Your profile"><span id="navProfileAvatar">S</span></button></header>
+<header class="top"><div class="brand">Skill<span>Swap</span> ✳</div><div class="top-actions"><button class="notification-shortcut" type="button" onclick="showTab('notifications')" aria-label="Open notifications" title="Notifications">🔔<span id="notificationBadge" class="notification-badge hidden">0</span></button><button class="profile-shortcut" type="button" onclick="showTab('account')" aria-label="Open your profile" title="Your profile"><span id="navProfileAvatar">S</span></button></div></header>
 <section id="account" class="page hidden">
 <button class="account-back" type="button" onclick="showTab(previousTab || 'discover')" aria-label="Go back" title="Back">←</button>
 <section class="account-hero">
@@ -178,6 +207,18 @@ body.account-open .tabs{display:none!important}
 </section>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
 <nav class="tabs"><button class="active" data-tab="discover" onclick="showTab('discover')">🔎 Discover</button><button data-tab="activity" onclick="showTab('activity')">📨 Requests</button><button data-tab="chat" onclick="showTab('chat')">💬 Mission Rooms</button><button data-tab="leaderboard" onclick="showTab('leaderboard')">🏆 Leaderboard</button><button data-tab="swaps" onclick="showTab('swaps')">🔁 My swaps</button></nav>
+
+<section id="notifications" class="page hidden">
+ <button class="notification-back" type="button" onclick="showTab(previousTab || 'discover')" aria-label="Go back" title="Back">←</button>
+ <div class="notification-hero">
+  <div class="eyebrow">YOUR UPDATES</div>
+  <h1>Notifications 🔔</h1>
+  <p>Swap requests, acceptances and new Mission Room messages, all in one place.</p>
+ </div>
+ <div class="notification-toolbar"><span class="muted" id="notificationSummary">Your latest updates</span><button type="button" onclick="markAllNotificationsRead()">Mark all as read</button></div>
+ <div id="notificationList" class="notification-list"><div class="notification-empty">Sign in to see your notifications.</div></div>
+</section>
+
 <section id="leaderboard" class="page hidden">
  <div class="leaderboard-hero">
   <div class="eyebrow">SkillSwap champions</div>
@@ -216,7 +257,7 @@ let profile=JSON.parse(localStorage.getItem("ss_profile")||"{}");
 let requests=JSON.parse(localStorage.getItem("ss_requests")||"[]");
 function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 let previousTab="discover";
-function showTab(tab){if(tab!=="account"&&tab!=="roomPage")previousTab=tab;document.body.classList.toggle("account-open",tab==="account");document.querySelector(".tabs")?.classList.toggle("hidden",tab==="account");document.querySelectorAll(".page").forEach(x=>x.classList.toggle("hidden",x.id!==tab));document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===(tab==="roomPage"?"chat":tab)));if(tab==="activity")renderRequests();if(tab==="leaderboard")renderLeaderboard();if(tab==="swaps")renderSwaps();if(tab==="account")fillProfile();if(tab==="chat")renderChatPage();history.replaceState(null,"",tab==="roomPage"?"#room-"+(activeRoomId||""):"#"+tab)}
+function showTab(tab){if(tab!=="account"&&tab!=="roomPage"&&tab!=="notifications")previousTab=tab;document.body.classList.toggle("account-open",tab==="account");document.body.classList.toggle("notifications-open",tab==="notifications");const hideTabs=tab==="account"||tab==="notifications";document.querySelector(".tabs")?.classList.toggle("hidden",hideTabs);document.querySelectorAll(".page").forEach(x=>x.classList.toggle("hidden",x.id!==tab));document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===(tab==="roomPage"?"chat":tab)));if(tab==="activity")renderRequests();if(tab==="leaderboard")renderLeaderboard();if(tab==="swaps")renderSwaps();if(tab==="account")fillProfile();if(tab==="chat")renderChatPage();if(tab==="notifications")renderNotifications();history.replaceState(null,"",tab==="roomPage"?"#room-"+(activeRoomId||""):"#"+tab)}
 function norm(s){return String(s||"").trim().toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/\\s+/g," ")}
 function getMatch(p){if(!profile.teach||!profile.learn)return {score:null,label:"Add your skills for a match"};let canTeach=norm(profile.teach)===norm(p.learn),canLearn=norm(profile.learn)===norm(p.teach);return {score:canTeach&&canLearn?100:canTeach||canLearn?70:25,label:canTeach&&canLearn?"Perfect two-way swap":canTeach||canLearn?"One-way skill match":"Explore this skill"}}
 function requestSwap(name,skill){if(requests.some(r=>r.name===name)){alert("You've already requested a swap with "+name+" in this demo.");return}requests.unshift({name,skill,status:"Pending"});localStorage.setItem("ss_requests",JSON.stringify(requests));updateStats();alert("Demo request sent!");}
@@ -234,14 +275,84 @@ function renderRequests(){let el=document.getElementById("requests");el.innerHTM
 function updateStats(){document.getElementById("skillStat").textContent=profile.teach?1:0;document.getElementById("requestStat").textContent=requests.length}
 const db=window.supabase.createClient("https://qmjmfjgqfmrrdlgmjksh.supabase.co","sb_publishable_gOwrGejFZia29Yl8GlzI7A_RNenYsud");
 let user=null, people=[], swaps=[], plans=[], leaderboardRows=[], leaderboardPeriod="all";
+let notifications=[],notificationChannel=null;
 fillProfile();updateStats();renderRequests();
 const status=m=>{const el=document.getElementById("authStatus");if(el)el.textContent=m;};
 function syncAuthPanel(){document.getElementById("authPanel").classList.toggle("hidden",!!user);document.getElementById("signedInPanel").classList.toggle("hidden",!user);}
 let toastTimer;function showToast(message){const el=document.getElementById("toast");el.textContent=message;el.classList.add("show");clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove("show"),3200);}
+
+function renderNotificationBadge(){
+ const badge=document.getElementById("notificationBadge");
+ if(!badge)return;
+ const unread=notifications.filter(n=>!n.is_read).length;
+ badge.textContent=unread>9?"9+":String(unread);
+ badge.classList.toggle("hidden",unread===0);
+}
+function renderNotifications(){
+ const list=document.getElementById("notificationList"),summary=document.getElementById("notificationSummary");
+ if(!list)return;
+ if(!user){list.innerHTML='<div class="notification-empty">Sign in to see your notifications.</div>';if(summary)summary.textContent="Sign in required";renderNotificationBadge();return;}
+ const unread=notifications.filter(n=>!n.is_read).length;
+ if(summary)summary.textContent=notifications.length+" update(s) · "+unread+" unread";
+ if(!notifications.length){list.innerHTML='<div class="notification-empty">✨ You are all caught up. New swap activity will appear here.</div>';renderNotificationBadge();return;}
+ const icons={swap_request:"📨",swap_accepted:"✅",swap_declined:"↩️",new_message:"💬"};
+ list.innerHTML=notifications.map(n=>'<button type="button" class="notification-item '+(n.is_read?'read':'unread')+'" onclick="openNotification(&quot;'+n.id+'&quot;)"><span class="notification-icon">'+(icons[n.type]||"🔔")+'</span><span class="notification-copy"><strong>'+esc(n.title)+'</strong><p>'+esc(n.body)+'</p><small>'+esc(new Date(n.created_at).toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}))+'</small></span><span class="notification-unread-dot"></span></button>').join("");
+ renderNotificationBadge();
+}
+async function loadNotifications(){
+ if(!user){notifications=[];renderNotifications();return;}
+ const {data,error}=await db.from("notifications").select("id,type,title,body,is_read,created_at,request_id,actor_id").order("created_at",{ascending:false}).limit(60);
+ if(error){showToast("Could not load notifications: "+error.message);return;}
+ notifications=data||[];renderNotifications();
+}
+function closeNotificationChannel(){
+ if(notificationChannel){db.removeChannel(notificationChannel);notificationChannel=null;}
+}
+function setupNotificationChannel(){
+ closeNotificationChannel();
+ if(!user)return;
+ notificationChannel=db.channel("user-notifications-"+user.id)
+  .on("postgres_changes",{event:"INSERT",schema:"public",table:"notifications",filter:"recipient_id=eq."+user.id},payload=>{
+   const n=payload.new;if(!n||notifications.some(x=>x.id===n.id))return;
+   notifications.unshift(n);notifications=notifications.slice(0,60);renderNotifications();
+   showToast("🔔 "+(n.title||"New notification"));
+  })
+  .on("postgres_changes",{event:"UPDATE",schema:"public",table:"notifications",filter:"recipient_id=eq."+user.id},payload=>{
+   const n=payload.new;if(!n)return;
+   notifications=notifications.map(x=>x.id===n.id?{...x,...n}:x);renderNotifications();
+  })
+  .subscribe();
+}
+async function markNotificationRead(id){
+ if(!user)return;
+ const {error}=await db.from("notifications").update({is_read:true}).eq("id",id);
+ if(error){showToast("Could not update notification: "+error.message);return;}
+ notifications=notifications.map(n=>n.id===id?{...n,is_read:true}:n);renderNotifications();
+}
+async function markAllNotificationsRead(){
+ if(!user)return;
+ if(!notifications.some(n=>!n.is_read))return;
+ const {error}=await db.from("notifications").update({is_read:true}).eq("recipient_id",user.id).eq("is_read",false);
+ if(error){showToast("Could not mark notifications as read: "+error.message);return;}
+ notifications=notifications.map(n=>({...n,is_read:true}));renderNotifications();showToast("All caught up! ✓");
+}
+async function openNotification(id){
+ const n=notifications.find(x=>x.id===id);if(!n)return;
+ if(!n.is_read)await markNotificationRead(id);
+ if(n.type==="new_message"&&n.request_id){
+  showTab("chat");
+  selectChatRoom(n.request_id);
+ }else if(n.type==="swap_accepted"){
+  showTab("swaps");
+ }else{
+  showTab("activity");
+ }
+}
+
 async function signUp(){const email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPassword").value;if(!email||password.length<8)return status("Enter an email and a password of at least 8 characters.");const {data,error}=await db.auth.signUp({email,password});if(error){status(error.message);showToast("Could not create account: "+error.message);return;}if(data.session){status("Account created successfully.");showToast("🎉 Account created successfully!");await loadCloud();}else{status("Account created. Check your email to confirm, then sign in.");showToast("🎉 Account created! Check your email to confirm it.");}}
 async function signIn(){const email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPassword").value;const {error}=await db.auth.signInWithPassword({email,password});if(error){status(error.message);showToast("Sign in failed: "+error.message);return;}showToast("✅ Sign in successful!");await loadCloud();}
-async function signOut(){closeRoomChannels();const {error}=await db.auth.signOut();if(error){showToast("Sign out failed: "+error.message);return;}user=null;people=[];swaps=[];syncAuthPanel();status("Signed out.");renderPeople();renderRequests();}
-async function loadCloud(){const {data:{user:u}}=await db.auth.getUser();user=u;syncAuthPanel();if(!user){status("Not signed in. Demo profiles only.");renderPeople();return;}status("Loading shared SkillSwap data...");const [p,s,pl,lb]=await Promise.all([db.from("profiles").select("id,display_name,teaches,learns,category,about,swap_mode").order("created_at",{ascending:false}),db.from("swap_requests").select("id,sender_id,recipient_id,skill,status,sender_completed,recipient_completed").order("created_at",{ascending:false}),db.from("swap_plans").select("id,request_id,goal,session_at,tasks,updated_by").order("updated_at",{ascending:false}),db.from("leaderboard_scores").select("user_id,display_name,total_xp,weekly_xp").order("total_xp",{ascending:false})]);if(p.error||s.error){status("Could not load profiles or requests: "+(p.error||s.error).message);return;}people=p.data||[];swaps=s.data||[];plans=pl.error?[]:(pl.data||[]);leaderboardRows=lb.error?[]:(lb.data||[]);requests=swaps.filter(x=>x.sender_id===user.id).map(x=>({name:(people.find(p=>p.id===x.recipient_id)||{}).display_name||"Member",skill:x.skill,status:x.status}));const mine=people.find(x=>x.id===user.id);profile=mine?{name:mine.display_name,teach:mine.teaches,learn:mine.learns,cat:mine.category,about:mine.about,swapMode:mine.swap_mode||"online"}:{};fillProfile();renderPeople();renderRequests();renderSwaps();renderChatPage();renderLeaderboard();updateStats();status("Connected! "+people.length+" shared profile(s)."+(pl.error?" Session planner setup needed: run supabase-session-planner.sql.":""));const route=location.hash.slice(1);if(route.startsWith("room-"))setTimeout(()=>selectChatRoom(route.slice(5)),0);}
+async function signOut(){closeRoomChannels();closeNotificationChannel();const {error}=await db.auth.signOut();if(error){showToast("Sign out failed: "+error.message);return;}user=null;people=[];swaps=[];notifications=[];renderNotificationBadge();renderNotifications();syncAuthPanel();status("Signed out.");renderPeople();renderRequests();}
+async function loadCloud(){const {data:{user:u}}=await db.auth.getUser();user=u;syncAuthPanel();if(!user){closeNotificationChannel();notifications=[];renderNotificationBadge();renderNotifications();status("Not signed in. Demo profiles only.");renderPeople();return;}status("Loading shared SkillSwap data...");const [p,s,pl,lb]=await Promise.all([db.from("profiles").select("id,display_name,teaches,learns,category,about,swap_mode").order("created_at",{ascending:false}),db.from("swap_requests").select("id,sender_id,recipient_id,skill,status,sender_completed,recipient_completed").order("created_at",{ascending:false}),db.from("swap_plans").select("id,request_id,goal,session_at,tasks,updated_by").order("updated_at",{ascending:false}),db.from("leaderboard_scores").select("user_id,display_name,total_xp,weekly_xp").order("total_xp",{ascending:false})]);if(p.error||s.error){status("Could not load profiles or requests: "+(p.error||s.error).message);return;}people=p.data||[];swaps=s.data||[];plans=pl.error?[]:(pl.data||[]);leaderboardRows=lb.error?[]:(lb.data||[]);requests=swaps.filter(x=>x.sender_id===user.id).map(x=>({name:(people.find(p=>p.id===x.recipient_id)||{}).display_name||"Member",skill:x.skill,status:x.status}));const mine=people.find(x=>x.id===user.id);profile=mine?{name:mine.display_name,teach:mine.teaches,learn:mine.learns,cat:mine.category,about:mine.about,swapMode:mine.swap_mode||"online"}:{};fillProfile();renderPeople();renderRequests();renderSwaps();renderChatPage();renderLeaderboard();updateStats();await loadNotifications();setupNotificationChannel();status("Connected! "+people.length+" shared profile(s)."+(pl.error?" Session planner setup needed: run supabase-session-planner.sql.":""));const route=location.hash.slice(1);if(route.startsWith("room-"))setTimeout(()=>selectChatRoom(route.slice(5)),0);}
 async function saveProfile(){if(!user)return status("Sign in first to save your profile.");const row={id:user.id,display_name:document.getElementById("name").value.trim(),teaches:document.getElementById("teach").value.trim(),learns:document.getElementById("learn").value.trim(),category:document.getElementById("mycat").value,about:document.getElementById("about").value.trim(),swap_mode:document.getElementById("swapMode").value};if(!row.display_name||!row.teaches||!row.learns)return document.getElementById("savedMsg").textContent="Add your display name and both skills.";const {error}=await db.from("profiles").upsert(row);if(error)return document.getElementById("savedMsg").textContent=error.message;document.getElementById("savedMsg").textContent="Saved to the shared database!";updateAccountPreview();await loadCloud();}
 
 function setLeaderboardPeriod(period){leaderboardPeriod=period==="weekly"?"weekly":"all";renderLeaderboard();}
