@@ -187,6 +187,9 @@ button{min-height:42px;touch-action:manipulation}
 .leaderboard-row.rank-1.me,.leaderboard-row.rank-2.me,.leaderboard-row.rank-3.me{outline:2px solid rgba(255,255,255,.18);outline-offset:2px}
 
 @media(max-width:600px){.leaderboard-hero{padding:22px 18px;border-radius:19px}.my-rank-card{align-items:flex-start;flex-direction:column}.leaderboard-row{grid-template-columns:36px minmax(0,1fr) auto;padding:12px 11px}.leaderboard-xp{font-size:13px}}
+
+.match-intro{margin:-5px 0 14px;font-size:12px}.match-card{position:relative;overflow:hidden}.match-track{height:5px;background:#252b3c;border-radius:99px;overflow:hidden;margin:13px 0 8px}.match-track span{display:block;height:100%;background:linear-gradient(90deg,#6e66e8,#43d6b5);border-radius:99px;transition:width .25s}.match-perfect{color:#9ff2d8}.match-reasons{display:flex;flex-wrap:wrap;gap:5px;margin:8px 0}.match-reason{font-size:11px;color:#c6d4e8;background:#202b38;border:1px solid #344357;border-radius:8px;padding:5px 7px}.match-card .match{line-height:1.5}
+
 </style>
 </head>
 <body><main class="wrap">
@@ -221,7 +224,7 @@ button{min-height:42px;touch-action:manipulation}
 <section id="discover" class="page"><section class="hero"><div class="eyebrow">Learn together. Grow together.</div><h1>Your skills are<br>someone's <em>superpower.</em></h1><p>Swap what you know for what you want to learn. No money needed, just skills, curiosity and a little teamwork.</p><button onclick="showTab('discover')">Find my skill match ↗</button></section>
 <section class="stats"><div class="stat"><strong id="skillStat">0</strong><small>Skills listed</small></div><div class="stat"><strong id="requestStat">0</strong><small>Swap requests</small></div></section>
 
-<section id="discoverResults"><div class="sectionhead"><h2>Find a skill partner</h2><span class="muted">Skill mission board</span></div><p class="muted">No followers. No feed. Just skill matches, shared tasks and real progress.</p><div class="filters"><input id="search" placeholder="Search a skill..." oninput="renderPeople()"><select id="category" onchange="renderPeople()"><option value="">All skills</option><option>Design</option><option>Technology</option><option>Creative</option><option>Academic</option></select><select id="modeFilter" onchange="renderPeople()"><option value="">Any swap mode</option><option value="online">Online</option><option value="async">Async missions</option><option value="in_person">In-person</option><option value="both">Flexible</option></select></div><div class="cards" id="people"></div></section>
+<section id="discoverResults"><div class="sectionhead"><h2>Find a skill partner</h2><span class="muted">Skill mission board</span></div><p class="muted">No followers. No feed. Just skill matches, shared tasks and real progress.</p><div class="filters"><input id="search" placeholder="Search skills or people..." oninput="renderPeople()"><select id="category" onchange="renderPeople()"><option value="">All skills</option><option>Design</option><option>Technology</option><option>Creative</option><option>Academic</option></select><select id="modeFilter" onchange="renderPeople()"><option value="">Any swap mode</option><option value="online">Online</option><option value="async">Async missions</option><option value="in_person">In-person</option><option value="both">Flexible</option></select><select id="matchFilter" onchange="renderPeople()"><option value="all">All matches</option><option value="two-way">Two-way matches</option><option value="strong">Strong matches</option><option value="related">Related skills</option></select></div><p class="muted match-intro">Smart matching compares both sides of the swap, recognises related skills and ranks the most useful partners first.</p><div class="cards" id="people"></div></section>
 </section>
 <section id="activity" class="page hidden"><div class="sectionhead"><h2>Swap requests</h2><button onclick="refreshRequests()">Refresh from database</button></div><div class="card" id="requests"></div><p class="muted">Keep contact details private. For in-person swaps, choose a public place and let a trusted adult know.</p></section><section id="swaps" class="page hidden"><div class="sectionhead"><h2>Active swaps</h2><span class="muted">Your accepted exchanges</span></div><div class="cards" id="activeSwaps"></div><div class="sectionhead"><h2>Completed swaps</h2></div><div class="cards" id="completedSwaps"></div><p class="muted">A swap is completed only after both people confirm they have finished their part.</p></section>
 <section id="chat" class="page hidden"><div class="sectionhead"><h2>💬 Mission Rooms</h2><span class="muted">Private chats for active swaps</span></div><p class="muted">Only accepted swap partners can access their room. Rooms close permanently after both people complete the swap.</p><div id="chatRooms" class="cards"></div><div id="chatWorkspace"></div></section>
@@ -278,7 +281,56 @@ function renderLeaderboard(){
  if(!rows.length||rows.every(r=>scoreOf(r)===0)){list.innerHTML='<div class="empty">No XP scores yet. Complete a swap with a partner to claim the first spot! 🏆</div>';return;}
  list.innerHTML=rows.slice(0,100).map((r,i)=>{const rank=1+rows.filter(other=>scoreOf(other)>scoreOf(r)).length;const medal=rank===1?"🥇":rank===2?"🥈":rank===3?"🥉":"#"+rank;const podium=rank<=3?" rank-"+rank:"";const label=rank===1?"🥇 #1 Champion":rank===2?"🥈 #2 Runner-up":rank===3?"🥉 #3 Rising star":"SkillSwap learner & teacher";return '<div class="leaderboard-row'+podium+' '+(r.user_id===user.id?'me':'')+'"><div class="leaderboard-place">'+medal+'</div><div><div class="leaderboard-name">'+esc(r.display_name||"SkillSwap member")+(r.user_id===user.id?" · You":"")+'</div><div class="leaderboard-sub">'+label+'</div></div><div class="leaderboard-xp">'+scoreOf(r)+' XP</div></div>';}).join("");
 }
-function renderPeople(){const q=document.getElementById("search").value.toLowerCase(),cat=document.getElementById("category").value;const src=user?people.filter(p=>p.id!==user.id).map(p=>({id:p.id,name:p.display_name,teach:p.teaches,learn:p.learns,cat:p.category,about:p.about,swapMode:p.swap_mode||"online",emoji:(p.display_name||"?")[0],score:profile.teach&&profile.learn?(norm(profile.teach)===norm(p.learns)&&norm(profile.learn)===norm(p.teaches)?100:norm(profile.teach)===norm(p.learns)||norm(profile.learn)===norm(p.teaches)?70:25):null})):demo.map(p=>({...p,id:"",score:null}));const list=src.filter(p=>(!q||(p.name+" "+p.teach+" "+p.learn).toLowerCase().includes(q))&&(!cat||p.cat===cat)&&(!document.getElementById("modeFilter").value||p.swapMode===document.getElementById("modeFilter").value||p.swapMode==="both"&&document.getElementById("modeFilter").value!=="both")).sort((a,b)=>(b.score??0)-(a.score??0));document.getElementById("people").innerHTML=list.map(p=>'<article class="card"><div class="person"><div class="avatar">'+esc(p.emoji)+'</div><div><h3>'+esc(p.name)+'</h3><div class="match">'+(p.score===null?"Demo / add your skills":p.score+"% match")+'</div></div></div><p>'+esc(p.about)+'</p><div class="muted">Can teach</div><span class="tag">'+esc(p.teach)+'</span><div class="muted">Wants to learn</div><span class="tag">'+esc(p.learn)+'</span><div class="muted">Swap mode</div><span class="tag">'+esc(({online:"Online live",async:"Async missions",in_person:"In-person",both:"Flexible"}[p.swapMode]||"Online live"))+'</span><button '+(!user||!p.id?'disabled':'')+' onclick="requestSwap(&quot;'+p.id+'&quot;)">'+(user?"Request a swap":"Sign in to request")+'</button></article>').join("")||'<div class="empty">No shared profiles yet. Add yours!</div>';}
+function skillSimilarity(a,b){
+ const clean=s=>norm(s).replace(/\b(beginner|basics|basic|advanced|intro|introduction|course|lessons|skills|skill|the|and|for|with)\b/g," ").replace(/\s+/g," ").trim();
+ const x=clean(a),y=clean(b);if(!x||!y)return 0;if(x===y)return 1;
+ const groups=[
+  ["graphic design","canva","photoshop","illustrator","logo design","poster design","thumbnail design","social media design","ui design"],
+  ["video editing","capcut","premiere pro","filmora","davinci resolve","reels editing","shorts editing","video production"],
+  ["programming","coding","python","javascript","java","c++","html","css","web development","app development"],
+  ["digital art","drawing","sketching","illustration","procreate","character design"],
+  ["photography","photo editing","lightroom","videography"],
+  ["english speaking","spoken english","communication","public speaking","presentation"],
+  ["writing","creative writing","storytelling","copywriting","blogging"],
+  ["mathematics","math","algebra","geometry","calculus"],
+  ["music","guitar","piano","singing","music production"],
+  ["3d design","blender","3d modelling","3d modeling","animation"],
+  ["spreadsheets","excel","google sheets","data analysis"],
+  ["science","physics","chemistry","biology"]
+ ];
+ const canon=s=>{for(const g of groups)if(g.includes(s))return g[0];return s;};
+ if(canon(x)===canon(y))return .9;
+ if(x.includes(y)||y.includes(x))return .72;
+ const stop=new Set(["a","an","to","of","in","on","my","your","from","using"]);
+ const tx=new Set(x.split(" ").filter(w=>w.length>2&&!stop.has(w))),ty=new Set(y.split(" ").filter(w=>w.length>2&&!stop.has(w)));
+ const overlap=[...tx].filter(w=>ty.has(w)).length,union=new Set([...tx,...ty]).size;
+ return union?Math.min(.68,(overlap/union)*.85):0;
+}
+function calculateMatch(p){
+ if(!profile.teach||!profile.learn)return {score:null,label:"Add your skills to see your match",reasons:[],twoWay:false};
+ const teachFit=skillSimilarity(profile.teach,p.learn),learnFit=skillSimilarity(p.teach,profile.learn);
+ const twoWay=teachFit>=.62&&learnFit>=.62;
+ const oneWay=(teachFit>=.62||learnFit>=.62);
+ let score=twoWay?70+Math.round(((teachFit+learnFit)/2)*30):oneWay?35+Math.round(Math.max(teachFit,learnFit)*35):Math.round(Math.max(teachFit,learnFit)*25);
+ const reasons=[];
+ if(teachFit>=.62)reasons.push("You can teach "+p.name+" "+p.learn);
+ if(learnFit>=.62)reasons.push(p.name+" can teach you "+profile.learn);
+ if(!reasons.length&&Math.max(teachFit,learnFit)>.15)reasons.push("Some skill overlap worth exploring");
+ if(p.cat&&profile.cat&&p.cat===profile.cat)score=Math.min(100,score+2);
+ if((profile.swapMode==="both"||p.swapMode==="both"||profile.swapMode===p.swapMode)&&p.swapMode)score=Math.min(100,score+2);
+ return {score,label:twoWay?"Two-way skill match":oneWay?"One-way skill match":score>=10?"Related skills":"Low compatibility",reasons,twoWay,teachFit,learnFit};
+}
+function renderPeople(){
+ const q=document.getElementById("search").value.toLowerCase(),cat=document.getElementById("category").value,mode=document.getElementById("modeFilter").value,matchFilter=document.getElementById("matchFilter")?.value||"all";
+ const src=user?people.filter(p=>p.id!==user.id).map(p=>({id:p.id,name:p.display_name,teach:p.teaches,learn:p.learns,cat:p.category,about:p.about,swapMode:p.swap_mode||"online",emoji:(p.display_name||"?")[0]})):demo.map(p=>({...p,id:""}));
+ const list=src.map(p=>({...p,match:calculateMatch(p)})).filter(p=>(!q||(p.name+" "+p.teach+" "+p.learn+" "+p.about).toLowerCase().includes(q))&&(!cat||p.cat===cat)&&(!mode||p.swapMode===mode||p.swapMode==="both")&&(matchFilter==="all"||matchFilter==="two-way"&&p.match.twoWay||matchFilter==="strong"&&(p.match.score??0)>=60||matchFilter==="related"&&(p.match.score??0)>=10)).sort((a,b)=>(b.match.score??-1)-(a.match.score??-1));
+ document.getElementById("people").innerHTML=list.map(p=>{
+  const m=p.match,score=m.score===null?"Add your skills":m.score+"% match";
+  const reasons=m.reasons.length?m.reasons.map(r=>'<span class="match-reason">'+esc(r)+'</span>').join(""):'<span class="match-reason muted">'+(m.score===null?"Complete your profile to unlock smart matching.":"No strong skill overlap yet.")+'</span>';
+  return '<article class="card match-card"><div class="person"><div class="avatar">'+esc(p.emoji)+'</div><div><h3>'+esc(p.name)+'</h3><div class="match '+(m.twoWay?"match-perfect":"")+'">'+score+' · '+esc(m.label)+'</div></div></div><div class="match-track"><span style="width:'+(m.score??0)+'%"></span></div><div class="match-reasons">'+reasons+'</div><p>'+esc(p.about)+'</p><div class="muted">Can teach</div><span class="tag">'+esc(p.teach)+'</span><div class="muted">Wants to learn</div><span class="tag">'+esc(p.learn)+'</span><div class="muted">Swap mode</div><span class="tag">'+esc(({online:"Online live",async:"Async missions",in_person:"In-person",both:"Flexible"}[p.swapMode]||"Online live"))+'</span><button '+(!user||!p.id?'disabled':'')+' onclick="requestSwap(&quot;'+p.id+'&quot;)">'+(user?"Request a swap":"Sign in to request")+'</button></article>';
+ }).join("")||'<div class="empty">No matches fit these filters. Try widening your search.</div>';
+}
+
 async function requestSwap(id){if(!user)return status("Sign in first.");const target=people.find(p=>p.id===id);if(!target)return;if(swaps.some(x=>x.sender_id===user.id&&x.recipient_id===id&&x.status==="pending"))return alert("You already have a pending request to "+target.display_name+".");const {error}=await db.from("swap_requests").insert({sender_id:user.id,recipient_id:id,skill:target.teaches});if(error)return alert("Could not send request: "+error.message);await loadCloud();showToast("Swap request sent!");}
 function renderRequests(){const el=document.getElementById("requests");if(!user){el.innerHTML='<div class="empty">Sign in to view shared requests.</div>';return;}const rows=swaps.filter(x=>x.sender_id===user.id||x.recipient_id===user.id);const pending=rows.filter(x=>x.status==="pending").length,accepted=rows.filter(x=>x.status==="accepted").length,declined=rows.filter(x=>x.status==="declined").length;const summary='<p class="muted">Synced with database: '+rows.length+' request(s) · '+pending+' pending · '+accepted+' accepted · '+declined+' declined</p>';const content=rows.length?rows.map(x=>{const outgoing=x.sender_id===user.id,other=people.find(p=>p.id===(outgoing?x.recipient_id:x.sender_id)),isPending=x.status==="pending"&&!outgoing;const actions=isPending?'<div class="request-actions"><button onclick="respondToRequest(&quot;'+x.id+'&quot;,&quot;accepted&quot;)">Accept</button><button class="decline" onclick="respondToRequest(&quot;'+x.id+'&quot;,&quot;declined&quot;)">Decline</button></div>':'';return '<div class="request"><div><b>'+esc(other?.display_name||"Member")+'</b><div class="muted">'+(outgoing?"You requested":"Incoming request")+': '+esc(x.skill)+'</div></div><span class="tag">'+esc(x.status.toUpperCase())+'</span>'+actions+'</div>';}).join(""):'<div class="empty">No requests are linked to this signed-in account. If you expected one, check that you are using the same account that sent or received it.</div>';el.innerHTML=summary+content;}
 async function refreshRequests(){const el=document.getElementById("requests");if(el)el.innerHTML='<div class="empty">Refreshing from Supabase...</div>';await loadCloud();renderRequests();}
