@@ -295,7 +295,7 @@ function renderNotifications(){
  const unread=notifications.filter(n=>!n.is_read).length;
  if(summary)summary.textContent=notifications.length+" update(s) · "+unread+" unread";
  if(!notifications.length){list.innerHTML='<div class="notification-empty">✨ You are all caught up. New swap activity will appear here.</div>';renderNotificationBadge();return;}
- const icons={swap_request:"📨",swap_accepted:"✅",swap_declined:"↩️",new_message:"💬"};
+ const icons={swap_request:"📨",swap_accepted:"✅",swap_declined:"↩️",new_message:"💬",swap_completed:"🏆"};
  list.innerHTML=notifications.map(n=>'<button type="button" class="notification-item '+(n.is_read?'read':'unread')+'" onclick="openNotification(&quot;'+n.id+'&quot;)"><span class="notification-icon">'+(icons[n.type]||"🔔")+'</span><span class="notification-copy"><strong>'+esc(n.title)+'</strong><p>'+esc(n.body)+'</p><small>'+esc(new Date(n.created_at).toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}))+'</small></span><span class="notification-unread-dot"></span></button>').join("");
  renderNotificationBadge();
 }
@@ -342,7 +342,7 @@ async function openNotification(id){
  if(n.type==="new_message"&&n.request_id){
   showTab("chat");
   selectChatRoom(n.request_id);
- }else if(n.type==="swap_accepted"){
+ }else if(n.type==="swap_accepted"||n.type==="swap_completed"){
   showTab("swaps");
  }else{
   showTab("activity");
