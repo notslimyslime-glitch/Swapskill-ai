@@ -1053,7 +1053,7 @@ function roomName(id){if(id===user?.id)return profile.name||"You";return people.
 function renderRoomMessages(requestId){
  const box=document.getElementById("roomMessages_"+requestId);if(!box)return;
  const rows=(roomMessages[requestId]||[]).slice().sort((a,b)=>new Date(a.created_at)-new Date(b.created_at));
- box.innerHTML=rows.length?rows.map(m=>'<div class="room-message '+(m.sender_id===user?.id?'mine':'')+'"><small>'+esc(roomName(m.sender_id))+' · '+esc(new Date(m.created_at).toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}))+'</small><p>'+esc(m.body)+'</p></div>').join(""):'<div class="muted">No messages yet. Start with a friendly hello!</div>';
+ box.innerHTML=rows.length?rows.map(m=>'<div class="room-message '+(m.sender_id===user?.id?'mine':'')+'"><small>'+esc(roomName(m.sender_id))+'</small><p>'+esc(m.body)+'</p><span class="dm-time">'+esc(new Date(m.created_at).toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"}))+'</span></div>').join(""):'<div class="muted">No messages yet. Start with a friendly hello!</div>';
  box.scrollTop=box.scrollHeight;
 }
 async function loadRoomMessages(requestId){
