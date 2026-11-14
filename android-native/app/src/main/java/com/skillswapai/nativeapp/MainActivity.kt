@@ -6,6 +6,15 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.setContent
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,6 +31,8 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -50,6 +61,13 @@ val Cream = Color(0xFFF0E8D5)
 val Muted = Color(0xFFA9B8AA)
 val SurfaceDark = Color(0xFF1C2921)
 val BackgroundDark = Color(0xFF101812)
+
+private fun accentColor(choice: String): Color = when (choice) {
+    "Ocean" -> Color(0xFF8BC7D8)
+    "Violet" -> Color(0xFFC2A5F5)
+    "Amber" -> Color(0xFFE5BD78)
+    else -> MaterialTheme.colorScheme.primary
+}
 
 data class Member(val id: String, val name: String, val teaches: String, val learns: String, val about: String)
 data class Swap(
@@ -113,6 +131,7 @@ private suspend fun authRequest(path: String, body: JSONObject): JSONObject = wi
 @Composable
 private fun SkillSwapApp(activity: ComponentActivity) {
     val prefs = remember { securePrefs(activity) }
+    val uiPrefs = remember { activity.getSharedPreferences("skillswap_ui_settings", android.content.Context.MODE_PRIVATE) }
     val scope = rememberCoroutineScope()
     var accessToken by remember { mutableStateOf<String?>(null) }
     var userId by remember { mutableStateOf<String?>(null) }
@@ -140,6 +159,9 @@ private fun SkillSwapApp(activity: ComponentActivity) {
     var message by remember { mutableStateOf("Sign in to continue to SkillSwap.") }
     var needsProfile by remember { mutableStateOf(false) }
     var lastBackPress by remember { mutableLongStateOf(0L) }
+    var accentChoice by remember { mutableStateOf(uiPrefs.getString("accent", "Sage") ?: "Sage") }
+    var animationsEnabled by remember { mutableStateOf(uiPrefs.getBoolean("animations_enabled", true)) }
+    var hapticsEnabled by remember { mutableStateOf(uiPrefs.getBoolean("haptics_enabled", true)) }
 
     fun blockMember(member: Member) {
         val token = accessToken ?: return
@@ -499,7 +521,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
         }
     }
 
-    MaterialTheme(colorScheme = darkColorScheme(primary = Color(0xFF9BC69A), onPrimary = BackgroundDark, background = BackgroundDark, surface = SurfaceDark, onSurface = Cream, onBackground = Cream)) {
+    MaterialTheme(colorScheme = darkColorScheme(primary = accentColor(accentChoice), onPrimary = BackgroundDark, background = BackgroundDark, surface = SurfaceDark, onSurface = Cream, onBackground = Cream)) {
         if (accessToken == null) {
             AuthScreen(authMode, { authMode = it }, emailInput, { emailInput = it }, passwordInput, { passwordInput = it }, busy, message, {
                 if (emailInput.isBlank() || passwordInput.length < 8) { message = "Enter a valid email and a password with at least 8 characters." }
@@ -536,10 +558,12 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                 showTutorial = false
             }
         } else {
+            val hapticFeedback = LocalHapticFeedback.current
             Scaffold(containerColor = BackgroundDark, bottomBar = {
                 if (selectedRoom == null) NavigationBar(containerColor = SurfaceDark, contentColor = Cream) {
                     listOf(Triple("Discover", Icons.Default.Explore, "Discover"), Triple("Swaps", Icons.Default.SwapHoriz, "Swaps"), Triple("Rooms", Icons.Default.Groups, "Rooms"), Triple("Ranks", Icons.Default.Leaderboard, "Ranks")).forEach { (label, icon, route) ->
                         NavigationBarItem(selected = tab == route, onClick = {
+                            if (hapticsEnabled) hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             tab = route
                             if (route == "Ranks") accessToken?.let { loadLeaderboard(it) }
                             if (route == "Rooms") selectedRoom = null
@@ -547,7 +571,17 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                     }
                 }
             }) { padding ->
-                when (tab) {
+                AnimatedContent(
+                    targetState = tab,
+                    transitionSpec = {
+                        if (animationsEnabled) {
+                            (fadeIn(tween(220)) + slideInHorizontally(initialOffsetX = { it / 12 }, animationSpec = tween(220))) togetherWith
+                                (fadeOut(tween(150)) + slideOutHorizontally(targetOffsetX = { -it / 18 }, animationSpec = tween(150)))
+                        } else EnterTransition.None togetherWith ExitTransition.None
+                    },
+                    label = "tab-transition"
+                ) { targetTab ->
+                when (targetTab) {
                     "Discover" -> DiscoverScreen(
                         Modifier.padding(padding), displayName, members, busy, message,
                         swaps.filter { (it.senderId == userId || it.recipientId == userId) && it.status in listOf("pending", "accepted") }
@@ -580,15 +614,24 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                         )
                     }
                     "Ranks" -> LeaderboardScreen(Modifier.padding(padding), leaderboard, busy, message) { accessToken?.let { loadLeaderboard(it) } }
+                    "Settings" -> SettingsScreen(
+                        Modifier.padding(padding), accentChoice,
+                        { accentChoice = it; uiPrefs.edit().putString("accent", it).apply() },
+                        animationsEnabled, { animationsEnabled = it; uiPrefs.edit().putBoolean("animations_enabled", it).apply() },
+                        hapticsEnabled, { hapticsEnabled = it; uiPrefs.edit().putBoolean("haptics_enabled", it).apply() },
+                        { tab = "Account" }
+                    )
                     "Notifications" -> NotificationsScreen(Modifier.padding(padding), notifications, busy,
                         { markNotificationRead(it) }, { tab = "Discover" }, { accessToken?.let { loadNotifications(it) } })
                     "Account" -> AccountScreen(Modifier.padding(padding), displayName, email, teaches, learns, about, message,
                         { needsProfile = true },
                         { current, next -> changeAccountPassword(current, next) },
                         { showTutorial = true },
+                        { tab = "Settings" },
                         { tab = "Discover" },
                         { prefs.edit().remove("refresh_token").apply(); accessToken = null; userId = null; members = emptyList(); swaps = emptyList(); selectedRoom = null; tab = "Discover"; message = "Signed out." })
-                    else -> PlaceholderScreen(tab, Modifier.padding(padding))
+                    else -> PlaceholderScreen(targetTab, Modifier.padding(padding))
+                }
                 }
             }
         }
@@ -780,7 +823,7 @@ private fun SwapCard(
 private fun AccountScreen(
     modifier: Modifier, name: String, email: String, teach: String, learn: String, about: String, message: String,
     edit: () -> Unit, onPasswordChange: (String, String) -> Unit, onReplayTutorial: () -> Unit,
-    onBack: () -> Unit, signOut: () -> Unit
+    onSettings: () -> Unit, onBack: () -> Unit, signOut: () -> Unit
 ) {
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
@@ -793,6 +836,7 @@ private fun AccountScreen(
         Text("I want to learn: $learn", color = Cream)
         if (about.isNotBlank()) Text(about, color = Muted)
         Button(onClick = edit, modifier = Modifier.fillMaxWidth()) { Text("Edit profile") }
+        OutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) { Text("Customise app") }
         Divider(color = ForestLight)
         Text("CHANGE PASSWORD", color = Color(0xFF9BC69A), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
         OutlinedTextField(currentPassword, { currentPassword = it }, label = { Text("Current password") }, singleLine = true,
