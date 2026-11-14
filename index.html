@@ -586,6 +586,18 @@ footer{color:#819284!important}
  #roomPage .room-messages{padding:18px 22px}
  #roomPage .room-message{max-width:70%}
 }
+
+/* WhatsApp-like full-screen Mission Room fix */
+body.room-open{overflow:hidden!important;height:100dvh!important}
+body.room-open .tabs{display:none!important}
+body.room-open #roomPage{display:block!important;position:fixed!important;z-index:80!important;top:82px!important;right:0!important;bottom:0!important;left:0!important;width:100%!important;max-width:none!important;margin:0!important;padding:0 14px calc(env(safe-area-inset-bottom) + 8px)!important;overflow:hidden!important;background:#0b1710!important}
+body.room-open #roomPageContent{height:100%!important;min-height:0!important;max-height:100%!important;display:flex!important;flex-direction:column!important;overflow:hidden!important;padding:0!important}
+body.room-open #roomPage .room-page-head{position:relative!important;top:auto!important;flex:0 0 auto!important;margin:0 -14px 8px!important;padding:12px 14px!important}
+body.room-open #roomPage .mission-room{display:flex!important;flex:1 1 auto!important;min-height:0!important;height:auto!important;overflow:hidden!important;padding:8px 0 0!important}
+body.room-open #roomPage .room-messages{flex:1 1 auto!important;min-height:0!important;max-height:none!important;overflow-y:auto!important;overscroll-behavior:contain!important;touch-action:pan-y!important}
+body.room-open #roomPage .room-compose{position:relative!important;bottom:auto!important;flex:0 0 auto!important;margin:8px 0 0!important;padding:8px!important}
+body.room-open #roomPage .room-compose textarea{min-height:48px!important;max-height:90px!important;resize:none!important}
+@media(min-width:700px){body.room-open #roomPage{top:88px!important;padding-left:max(24px,calc((100vw - 760px)/2))!important;padding-right:max(24px,calc((100vw - 760px)/2))!important}}
 </style>
 </head>
 <body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
@@ -715,7 +727,7 @@ let profile=JSON.parse(localStorage.getItem("ss_profile")||"{}");
 let requests=JSON.parse(localStorage.getItem("ss_requests")||"[]");
 function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 let previousTab="discover";
-function showTab(tab){if(tab!=="account"&&tab!=="roomPage"&&tab!=="notifications")previousTab=tab;document.body.classList.toggle("account-open",tab==="account");document.body.classList.toggle("notifications-open",tab==="notifications");const hideTabs=tab==="notifications";document.querySelector(".tabs")?.classList.toggle("hidden",hideTabs);document.querySelectorAll(".page").forEach(x=>x.classList.toggle("hidden",x.id!==tab));document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===(tab==="roomPage"?"chat":tab)));if(tab==="activity")renderRequests();if(tab==="leaderboard")renderLeaderboard();if(tab==="swaps")renderSwaps();if(tab==="account")fillProfile();if(tab==="chat")renderChatPage();if(tab==="notifications")renderNotifications();history.replaceState(null,"",tab==="roomPage"?"#room-"+(activeRoomId||""):"#"+tab)}
+function showTab(tab){if(tab!=="account"&&tab!=="roomPage"&&tab!=="notifications")previousTab=tab;document.body.classList.toggle("account-open",tab==="account");document.body.classList.toggle("notifications-open",tab==="notifications");document.body.classList.toggle("room-open",tab==="roomPage");const hideTabs=tab==="notifications"||tab==="roomPage";document.querySelector(".tabs")?.classList.toggle("hidden",hideTabs);document.querySelectorAll(".page").forEach(x=>x.classList.toggle("hidden",x.id!==tab));document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===(tab==="roomPage"?"chat":tab)));if(tab==="activity")renderRequests();if(tab==="leaderboard")renderLeaderboard();if(tab==="swaps")renderSwaps();if(tab==="account")fillProfile();if(tab==="chat")renderChatPage();if(tab==="notifications")renderNotifications();history.replaceState(null,"",tab==="roomPage"?"#room-"+(activeRoomId||""):"#"+tab)}
 
 const tutorialSteps=[
  {title:"Welcome to SkillSwap ✳",description:"SkillSwap AI is a student skill-exchange community. Teach something you know, learn something new, and swap skills without paying money.",target:null},
@@ -1067,9 +1079,8 @@ async function loadRoomMessages(requestId){
 }
 async function openMissionRoom(requestId){
  const panel=document.getElementById("missionRoom_"+requestId);if(!panel)return;
- const opening=panel.classList.contains("hidden");
- panel.classList.toggle("hidden",!opening);
- if(!opening){if(roomChannels[requestId]){db.removeChannel(roomChannels[requestId]);delete roomChannels[requestId];}return;}
+ panel.classList.remove("hidden");
+ document.body.classList.add("room-open");
  if(!roomChannels[requestId]){
   roomChannels[requestId]=db.channel("mission-room-"+requestId).on("postgres_changes",{event:"INSERT",schema:"public",table:"swap_messages",filter:"request_id=eq."+requestId},payload=>{
    const m=payload.new;if(!m||m.request_id!==requestId)return;
