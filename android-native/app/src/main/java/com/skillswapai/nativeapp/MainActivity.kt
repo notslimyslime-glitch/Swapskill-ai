@@ -141,19 +141,6 @@ private fun SkillSwapApp(activity: ComponentActivity) {
     var needsProfile by remember { mutableStateOf(false) }
     var lastBackPress by remember { mutableLongStateOf(0L) }
 
-    fun loadBlockedMembers(token: String) {
-        val currentUser = userId ?: return
-        scope.launch {
-            try {
-                val blocked = withContext(Dispatchers.IO) {
-                    request("/rest/v1/member_blocks?select=blocked_id&blocker_id=eq.$currentUser", token = token).optJSONArray("data") ?: JSONArray()
-                }
-                blockedIds = (0 until blocked.length()).map { blocked.getJSONObject(it).optString("blocked_id") }.toSet()
-                loadMembers(token)
-            } catch (e: Exception) { message = e.message ?: "Could not load your block list." }
-        }
-    }
-
     fun blockMember(member: Member) {
         val token = accessToken ?: return
         scope.launch {
@@ -209,6 +196,19 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                 message = "Connected · ${result.size} community profiles"
             } catch (e: Exception) { message = e.message ?: "Could not load members." }
             busy = false
+        }
+    }
+
+    fun loadBlockedMembers(token: String) {
+        val currentUser = userId ?: return
+        scope.launch {
+            try {
+                val blocked = withContext(Dispatchers.IO) {
+                    request("/rest/v1/member_blocks?select=blocked_id&blocker_id=eq.$currentUser", token = token).optJSONArray("data") ?: JSONArray()
+                }
+                blockedIds = (0 until blocked.length()).map { blocked.getJSONObject(it).optString("blocked_id") }.toSet()
+                loadMembers(token)
+            } catch (e: Exception) { message = e.message ?: "Could not load your block list." }
         }
     }
 
