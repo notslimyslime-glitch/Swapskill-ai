@@ -29,6 +29,7 @@ fun TutorialScreen(onDone: () -> Unit) {
     Column(Modifier.fillMaxSize().background(BackgroundDark).padding(24.dp), verticalArrangement = Arrangement.Center) {
         Text("WELCOME TO", color = Muted, fontSize = 12.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
         Text("SKILLSWAP AI", color = Color(0xFF9BC69A), fontSize = 30.sp, fontWeight = FontWeight.ExtraBold)
+        Text("Created by Mayank & Harsh", color = Muted, fontSize = 12.sp)
         Spacer(Modifier.height(22.dp))
         TutorialStep("01", "Discover", "Find people who can teach the skill you want to learn.")
         TutorialStep("02", "Swap fairly", "Send a request, agree on what to learn, and help each other grow.")
