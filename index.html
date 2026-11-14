@@ -170,10 +170,14 @@ function selectChatRoom(id){
  document.getElementById("roomPageContent").innerHTML='<div class="room-page-head"><button class="decline" onclick="showTab(&quot;chat&quot;)">← Chats</button><div><b>'+esc(other?.display_name||"SkillSwap member")+'</b><div class="muted" style="font-size:12px">SkillSwap · '+esc(x.skill)+'</div></div></div><article id="missionRoom_'+id+'" class="card mission-room hidden"><div class="room-note">Private room for this swap. Keep phone numbers, addresses and social handles private.</div><div id="roomMessages_'+id+'" class="room-messages" aria-live="polite"></div><div class="room-compose"><textarea id="roomInput_'+id+'" maxlength="1000" placeholder="Message…"></textarea><button id="roomSend_'+id+'" onclick="sendRoomMessage(&quot;'+id+'&quot;)">Send</button></div></article>';
  showTab("roomPage");openMissionRoom(id);
 }
+function missionRoomCreated(id){
+ try{return localStorage.getItem("missionRoomCreated:"+id)==="1";}catch(e){return false;}
+}
 function createMissionRoom(button,id){
  const x=swaps.find(s=>s.id===id&&s.status==="accepted"&&!(s.sender_completed&&s.recipient_completed));if(!x)return;
- button.textContent="Room created, check Mission Rooms to start discussing";
- button.disabled=true;showToast("Room created! Check Mission Rooms to start discussing.");showTab("chat");
+ try{localStorage.setItem("missionRoomCreated:"+id,"1");}catch(e){}
+ button.remove();
+ showToast("Room created! Check Mission Rooms to start discussing.");showTab("chat");
 }
 
 
@@ -192,7 +196,7 @@ function renderSwaps(){
   const plan=plans.find(p=>p.request_id===x.id)||{goal:"",session_at:"",tasks:[]};
   const taskRows=Array.isArray(plan.tasks)?plan.tasks:[];
   const taskHtml=taskRows.map((t,i)=>'<div class="request"><div><b>'+esc(t.label)+'</b><div class="muted">Your part: '+(outgoing?(t.sender_done?"Done ✓":"Not done"):(t.recipient_done?"Done ✓":"Not done"))+' · Partner: '+(outgoing?(t.recipient_done?"Done ✓":"Not done"):(t.sender_done?"Done ✓":"Not done"))+'</div></div><div class="request-actions">'+(!(outgoing?t.sender_done:t.recipient_done)?'<button class="decline" onclick="togglePlanTask(\''+x.id+'\','+i+')">Mark my task done</button>':'<span class="tag">You completed this ✓</span>')+'</div></div>').join("");
-  const chatPanel=finished?'<p class="muted">🔒 Both students completed this swap. The Mission Room and all chat messages have been permanently deleted.</p>':'<button class="decline" onclick="createMissionRoom(this,&quot;'+x.id+'&quot;)">＋ Create Mission Room</button>';
+  const chatPanel=finished?'<p class="muted">🔒 Both students completed this swap. The Mission Room and all chat messages have been permanently deleted.</p>':missionRoomCreated(x.id)?'':'<button class="decline" onclick="createMissionRoom(this,&quot;'+x.id+'&quot;)">＋ Create Mission Room</button>';
   const editor=!finished?'<div class="planner"><h3>📚 Learning session planner</h3><label>Learning goal</label><input id="goal_'+x.id+'" maxlength="180" placeholder="What should you both learn?" value="'+esc(plan.goal||"")+'"><label>Session date and time</label><input id="session_'+x.id+'" type="datetime-local" value="'+toLocalDateTime(plan.session_at)+'"><label>Tasks, one per line</label><textarea id="tasks_'+x.id+'" maxlength="1000" placeholder="Learn the basics\nPractise together\nShare feedback">'+taskRows.map(t=>esc(t.label)).join("\n")+'</textarea><button onclick="savePlan(\''+x.id+'\')">Save session plan</button><p class="muted">Both people can update this mission plan. For in-person sessions, meet in a public place and let a trusted adult know.</p><div class="tasklist">'+taskHtml+'</div></div>':'<p class="muted">This exchange is completed.</p>';
   return '<article class="card"><div class="person"><div class="avatar">'+esc((other?.display_name||"S")[0])+'</div><div><h3>'+esc(other?.display_name||"SkillSwap member")+'</h3><span class="tag">'+(finished?"Completed":"Active swap")+'</span></div></div><p><b>You teach:</b> '+esc(profile.teach||"Your listed skill")+'</p><p><b>You learn:</b> '+esc(learningSkill)+'</p><p><b>Your progress:</b> '+(myDone?"Complete ✓":"Not completed yet")+'</p><p><b>Their progress:</b> '+(theirDone?"Complete ✓":"Waiting for confirmation")+'</p>'+button+editor+chatPanel+'</article>';
  };
