@@ -345,7 +345,8 @@ function updateProfileCompletion(){
   {label:"Extra skill tags",done:tags.length>0,weight:10}
  ];
  const score=checks.reduce((sum,item)=>sum+(item.done?item.weight:0),0);
- const percent=document.getElementById("profileCompletionValue"),fill=document.getElementById("profileCompletionFill"),bar=document.getElementById("profileCompletionBar"),note=document.getElementById("profileCompletionNote"),list=document.getElementById("profileCompletionList");
+ const panel=document.querySelector(".profile-progress"),percent=document.getElementById("profileCompletionValue"),fill=document.getElementById("profileCompletionFill"),bar=document.getElementById("profileCompletionBar"),note=document.getElementById("profileCompletionNote"),list=document.getElementById("profileCompletionList");
+ if(panel)panel.style.display=score===100?"none":"";
  if(percent)percent.textContent=score+"%";
  if(fill)fill.style.width=score+"%";
  if(bar)bar.setAttribute("aria-valuenow",String(score));
