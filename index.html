@@ -244,7 +244,7 @@ button:disabled{opacity:.55;cursor:wait}
   <div class="account-panel-heading"><div class="account-panel-icon">◈</div><div><span class="account-eyebrow">ACCOUNT ACCESS</span><h2>Your cloud account</h2></div></div>
   <div id="authPanel" class="account-auth-content"><p class="muted">Sign in to sync your profile, requests and mission rooms across devices.</p><label for="authEmail">Email address</label><input id="authEmail" type="email" placeholder="you@example.com"><label for="authPassword">Password</label><input id="authPassword" type="password" placeholder="At least 8 characters"><div class="account-auth-actions"><button onclick="signIn()">Sign in ↗</button><button class="account-secondary-btn" onclick="signUp()">Create account</button></div><div id="authStatus" class="muted account-auth-status">Sign in to load shared profiles.</div></div>
   <div id="signedInPanel" class="account-auth-content hidden"><div class="account-connected"><span>✓</span><div><strong>You're connected</strong><p>Your SkillSwap data is synced with the cloud.</p></div></div><button class="account-secondary-btn account-signout" onclick="signOut()">Sign out</button>
-   <div class="account-settings-box"><h3>Security settings</h3><label for="newAccountPassword">Change password</label><input id="newAccountPassword" type="password" minlength="8" autocomplete="new-password" placeholder="New password (8+ characters)"><button type="button" class="account-secondary-btn" onclick="changeAccountPassword()">Update password</button><button type="button" class="account-secondary-btn" onclick="signOutEverywhere()">Sign out on all devices</button><div class="account-delete-note"><strong>Account deletion</strong><p>Self-service deletion isn't enabled yet. To request deletion of your account and associated data, contact the project owner. Don't share your password with anyone.</p></div></div>
+   <div class="account-settings-box"><h3>Security settings</h3><label for="currentAccountPassword">Current password</label><input id="currentAccountPassword" type="password" autocomplete="current-password" placeholder="Enter current password"><label for="newAccountPassword">New password</label><input id="newAccountPassword" type="password" minlength="8" autocomplete="new-password" placeholder="New password (8+ characters)"><button type="button" class="account-secondary-btn" onclick="changeAccountPassword()">Update password</button><button type="button" class="account-secondary-btn" onclick="signOutEverywhere()">Sign out on all devices</button><div class="account-delete-note"><strong>Account deletion</strong><p>Self-service deletion isn't enabled yet. To request deletion of your account and associated data, contact the project owner. Don't share your password with anyone.</p></div></div>
   </div>
  </section>
  <section class="account-panel account-profile-panel">
@@ -506,13 +506,21 @@ async function signUp(){const email=document.getElementById("authEmail").value.t
 async function signIn(){const email=document.getElementById("authEmail").value.trim(),password=document.getElementById("authPassword").value,buttons=document.querySelectorAll(".account-auth-actions button");if(!email||!password){status("Enter your email and password.");return;}buttons.forEach(b=>b.disabled=true);status("Signing in…");try{const {error}=await db.auth.signInWithPassword({email,password});if(error){status(error.message);showToast("Sign in failed: "+error.message);return;}showToast("✅ Sign in successful!");await loadCloud();}catch(e){status("Sign in couldn't finish. Check your connection and try again.");showToast("Connection problem. Please try again.");}finally{buttons.forEach(b=>b.disabled=false);}}
 async function changeAccountPassword(){
  if(!user){showToast("Sign in first.");return;}
- const input=document.getElementById("newAccountPassword"),password=input?.value||"";
- if(password.length<8){showToast("Use at least 8 characters for your new password.");return;}
- const button=input?.nextElementSibling;if(button){button.disabled=true;button.textContent="Updating…";}
- const {error}=await db.auth.updateUser({password});
- if(button){button.disabled=false;button.textContent="Update password";}
- if(error){showToast("Password update failed: "+error.message);return;}
- input.value="";showToast("Password updated successfully.");
+ const currentInput=document.getElementById("currentAccountPassword"),newInput=document.getElementById("newAccountPassword");
+ const currentPassword=currentInput?.value||"",newPassword=newInput?.value||"";
+ if(!currentPassword){showToast("Enter your current password.");currentInput?.focus();return;}
+ if(newPassword.length<8){showToast("Use at least 8 characters for your new password.");newInput?.focus();return;}
+ if(currentPassword===newPassword){showToast("Choose a password different from your current one.");return;}
+ const button=newInput?.nextElementSibling;if(button){button.disabled=true;button.textContent="Verifying…";}
+ try{
+  const {error:verifyError}=await db.auth.signInWithPassword({email:user.email,password:currentPassword});
+  if(verifyError){showToast("Current password is incorrect.");return;}
+  if(button)button.textContent="Updating…";
+  const {error}=await db.auth.updateUser({password:newPassword});
+  if(error){showToast("Password update failed: "+error.message);return;}
+  currentInput.value="";newInput.value="";showToast("Password updated successfully.");
+ }catch(e){showToast("Couldn't update password. Check your connection and try again.");}
+ finally{if(button){button.disabled=false;button.textContent="Update password";}}
 }
 async function signOutEverywhere(){
  if(!user)return;
