@@ -15,6 +15,11 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -36,7 +41,9 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
@@ -698,17 +705,31 @@ private fun DiscoverScreen(
             }
         }
         item {
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).background(Forest).padding(20.dp)) {
-                Text("YOUR NEXT SKILL STARTS HERE", color = Color(0xFFB9D6B2), fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(8.dp))
-                Text("Trade what you know\nfor what you want to learn.", color = Cream, fontSize = 23.sp, fontWeight = FontWeight.Bold)
-                Text("No money. Just skills, curiosity and community.", color = Muted, fontSize = 13.sp)
+            val pulseTransition = rememberInfiniteTransition(label = "hero-sparkle")
+            val pulse by pulseTransition.animateFloat(
+                initialValue = 0.92f, targetValue = 1.08f,
+                animationSpec = infiniteRepeatable(tween(1300), repeatMode = RepeatMode.Reverse),
+                label = "hero-pulse"
+            )
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp))
+                .background(Brush.linearGradient(listOf(ForestLight, Forest, Color(0xFF2B5C42))))
+                .padding(20.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("YOUR NEXT SKILL STARTS HERE", color = Color(0xFFB9D6B2), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(8.dp))
+                        Text("Trade what you know\nfor what you want to learn.", color = Cream, fontSize = 23.sp, fontWeight = FontWeight.Bold)
+                        Text("No money. Just skills, curiosity and community.", color = Muted, fontSize = 13.sp)
+                    }
+                    Text("✦", color = MaterialTheme.colorScheme.primary, fontSize = 48.sp,
+                        modifier = Modifier.graphicsLayer { scaleX = pulse; scaleY = pulse })
+                }
             }
         }
         item { Row(verticalAlignment = Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text("Explore the community", color = Cream, fontSize = 19.sp, fontWeight = FontWeight.Bold); Text(message, color = Muted, fontSize = 11.sp) }; TextButton(onClick = onRefresh) { Text("Refresh") } } }
         if (members.isEmpty()) item { Text(if (busy) "Loading members…" else "No other profiles yet. Invite a friend to join SkillSwap!", color = Muted, modifier = Modifier.padding(12.dp)) }
         items(members, key = { it.id }) { member ->
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(SurfaceDark).padding(16.dp)) {
+            Column(Modifier.fillMaxWidth().animateContentSize().clip(RoundedCornerShape(18.dp)).background(SurfaceDark).padding(16.dp)) {
                 Text(member.name, color = Cream, fontWeight = FontWeight.Bold, fontSize = 17.sp)
                 Text("Can teach: ${member.teaches}", color = Color(0xFF9BC69A), fontSize = 13.sp)
                 Text("Wants to learn: ${member.learns}", color = Muted, fontSize = 13.sp)
