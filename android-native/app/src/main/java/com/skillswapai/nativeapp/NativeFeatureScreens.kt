@@ -19,6 +19,16 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import kotlinx.coroutines.delay
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
+import okhttp3.WebSocket
+import okhttp3.WebSocketListener
+import org.json.JSONArray
+import org.json.JSONObject
+import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicInteger
 
 data class RoomMessage(val id: String, val requestId: String, val senderId: String, val body: String, val createdAt: String)
 data class LeaderboardEntry(val userId: String, val name: String, val points: Int)
@@ -84,10 +94,14 @@ fun RoomsScreen(modifier: Modifier, swaps: List<Swap>, userId: String, onOpen: (
 fun MissionRoomScreen(
     modifier: Modifier, swap: Swap, userId: String, messages: List<RoomMessage>,
     draft: String, setDraft: (String) -> Unit, busy: Boolean,
-    onSend: () -> Unit, onRefresh: () -> Unit, onBack: () -> Unit
+    onSend: () -> Unit, onRefresh: () -> Unit,
+    planGoal: String, setPlanGoal: (String) -> Unit, planTasks: String, setPlanTasks: (String) -> Unit,
+    onSavePlan: () -> Unit, accessToken: String, onBack: () -> Unit
 ) {
-    LaunchedEffect(swap.id) {
-        while (true) { delay(3500); onRefresh() }
+    DisposableEffect(swap.id, accessToken) {
+        val realtime = SupabaseRoomRealtime(accessToken, swap.id) { onRefresh() }
+        realtime.connect()
+        onDispose { realtime.close() }
     }
     Column(modifier.fillMaxSize().background(BackgroundDark)) {
         Row(Modifier.fillMaxWidth().background(SurfaceDark).padding(horizontal = 14.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -101,6 +115,17 @@ fun MissionRoomScreen(
         }
         Text("Keep phone numbers, addresses and social handles private. Meet only in a public place with a trusted adult aware.",
             color = Color(0xFFB9D6B2), fontSize = 11.sp, modifier = Modifier.fillMaxWidth().background(Forest).padding(12.dp))
+        var planExpanded by remember(swap.id) { mutableStateOf(false) }
+        Column(Modifier.fillMaxWidth().background(SurfaceDark).padding(horizontal = 12.dp, vertical = 8.dp)) {
+            TextButton(onClick = { planExpanded = !planExpanded }) { Text(if (planExpanded) "Hide session plan" else "Plan this swap", color = Color(0xFF9BC69A)) }
+            if (planExpanded) {
+                OutlinedTextField(value = planGoal, onValueChange = setPlanGoal, label = { Text("Shared learning goal") }, modifier = Modifier.fillMaxWidth(), singleLine = true)
+                Spacer(Modifier.height(6.dp))
+                OutlinedTextField(value = planTasks, onValueChange = setPlanTasks, label = { Text("Tasks, one per line") }, modifier = Modifier.fillMaxWidth(), minLines = 2, maxLines = 4)
+                Text("Both swap partners can update this shared plan.", color = Muted, fontSize = 11.sp)
+                Button(onClick = onSavePlan, enabled = !busy && planGoal.isNotBlank(), modifier = Modifier.fillMaxWidth()) { Text("Save shared plan") }
+            }
+        }
         LazyColumn(Modifier.weight(1f).fillMaxWidth(), contentPadding = PaddingValues(14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (messages.isEmpty()) item { Text("This is the start of your mission. Say hello and plan your first session!", color = Muted, fontSize = 13.sp) }
             items(messages, key = { it.id }) { msg ->
@@ -180,5 +205,51 @@ fun NotificationsScreen(modifier: Modifier, notifications: List<AppNotification>
                 if (!note.isRead) TextButton(onClick = { onRead(note.id) }) { Text("Mark as read") }
             }
         }
+    }
+}
+
+private const val REALTIME_URL = "wss://qmjmfjgqfmrrdlgmjksh.supabase.co/realtime/v1/websocket"
+private const val REALTIME_KEY = "sb_publishable_gOwrGejFZia29Yl8GlzI7A_RNenYsud"
+
+class SupabaseRoomRealtime(
+    private val accessToken: String,
+    private val requestId: String,
+    private val onInsert: () -> Unit
+) {
+    private val refs = AtomicInteger(1)
+    private val scheduler = Executors.newSingleThreadScheduledExecutor()
+    private val client = OkHttpClient.Builder().pingInterval(25, TimeUnit.SECONDS).build()
+    @Volatile private var socket: WebSocket? = null
+
+    fun connect() {
+        val request = Request.Builder().url("$REALTIME_URL?apikey=$REALTIME_KEY&vsn=1.0.0")
+            .header("apikey", REALTIME_KEY).header("Authorization", "Bearer $accessToken").build()
+        socket = client.newWebSocket(request, object : WebSocketListener() {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
+                val ref = refs.getAndIncrement().toString()
+                val changes = JSONArray().put(JSONObject().put("event", "INSERT").put("schema", "public")
+                    .put("table", "swap_messages").put("filter", "request_id=eq.$requestId"))
+                val config = JSONObject().put("broadcast", JSONObject().put("ack", false).put("self", false))
+                    .put("presence", JSONObject().put("key", "")).put("postgres_changes", changes)
+                val payload = JSONObject().put("config", config).put("access_token", accessToken)
+                webSocket.send(JSONObject().put("topic", "realtime:public:swap_messages").put("event", "phx_join")
+                    .put("payload", payload).put("ref", ref).put("join_ref", ref).toString())
+                scheduler.scheduleAtFixedRate({
+                    val heartbeatRef = refs.getAndIncrement().toString()
+                    socket?.send(JSONObject().put("topic", "phoenix").put("event", "heartbeat")
+                        .put("payload", JSONObject()).put("ref", heartbeatRef).toString())
+                }, 25, 25, TimeUnit.SECONDS)
+            }
+            override fun onMessage(webSocket: WebSocket, text: String) {
+                try { if (JSONObject(text).optString("event") == "postgres_changes") onInsert() } catch (_: Exception) { }
+            }
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) { close() }
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) { close() }
+        })
+    }
+    fun close() {
+        scheduler.shutdownNow()
+        socket?.close(1000, "Room closed")
+        socket = null
     }
 }
