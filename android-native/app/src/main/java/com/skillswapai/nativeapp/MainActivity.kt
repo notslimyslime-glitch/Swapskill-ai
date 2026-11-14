@@ -23,6 +23,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.security.crypto.EncryptedSharedPreferences
@@ -38,12 +39,12 @@ import java.net.URL
 
 private const val SUPABASE_URL = "https://qmjmfjgqfmrrdlgmjksh.supabase.co"
 private const val SUPABASE_KEY = "sb_publishable_gOwrGejFZia29Yl8GlzI7A_RNenYsud"
-private val Forest = Color(0xFF173B2A)
-private val ForestLight = Color(0xFF244B36)
-private val Cream = Color(0xFFF0E8D5)
-private val Muted = Color(0xFFA9B8AA)
-private val SurfaceDark = Color(0xFF1C2921)
-private val BackgroundDark = Color(0xFF101812)
+val Forest = Color(0xFF173B2A)
+val ForestLight = Color(0xFF244B36)
+val Cream = Color(0xFFF0E8D5)
+val Muted = Color(0xFFA9B8AA)
+val SurfaceDark = Color(0xFF1C2921)
+val BackgroundDark = Color(0xFF101812)
 
 data class Member(val id: String, val name: String, val teaches: String, val learns: String, val about: String)
 data class Swap(
@@ -121,6 +122,12 @@ private fun SkillSwapApp(activity: ComponentActivity) {
     var about by remember { mutableStateOf("") }
     var members by remember { mutableStateOf<List<Member>>(emptyList()) }
     var swaps by remember { mutableStateOf<List<Swap>>(emptyList()) }
+    var selectedRoom by remember { mutableStateOf<Swap?>(null) }
+    var roomMessages by remember { mutableStateOf<List<RoomMessage>>(emptyList()) }
+    var messageDraft by remember { mutableStateOf("") }
+    var leaderboard by remember { mutableStateOf<List<LeaderboardEntry>>(emptyList()) }
+    var notifications by remember { mutableStateOf<List<AppNotification>>(emptyList()) }
+    var showTutorial by remember { mutableStateOf(!prefs.getBoolean("tutorial_done", false)) }
     var busy by remember { mutableStateOf(false) }
     var message by remember { mutableStateOf("Sign in to continue to SkillSwap.") }
     var needsProfile by remember { mutableStateOf(false) }
@@ -220,6 +227,115 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                 message = "Your progress has been saved."
                 loadSwaps(token)
             } catch (e: Exception) { message = e.message ?: "Could not update swap progress." }
+            busy = false
+        }
+    }
+
+
+    fun loadRoomMessages(requestId: String, token: String) {
+        scope.launch {
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    val data = request("/rest/v1/swap_messages?select=id,request_id,sender_id,body,created_at&request_id=eq.$requestId&order=created_at.asc&limit=50", token = token).optJSONArray("data") ?: JSONArray()
+                    (0 until data.length()).map { i ->
+                        val item = data.getJSONObject(i)
+                        RoomMessage(item.optString("id"), item.optString("request_id"), item.optString("sender_id"), item.optString("body"), item.optString("created_at"))
+                    }
+                }
+                roomMessages = result
+            } catch (e: Exception) { message = e.message ?: "Could not load room messages." }
+        }
+    }
+
+    fun sendRoomMessage(requestId: String) {
+        val token = accessToken ?: return
+        val bodyText = messageDraft.trim()
+        if (bodyText.isBlank() || bodyText.length > 1000) return
+        scope.launch {
+            busy = true
+            try {
+                withContext(Dispatchers.IO) {
+                    request("/rest/v1/swap_messages", "POST", token,
+                        JSONObject().put("request_id", requestId).put("sender_id", userId).put("body", bodyText),
+                        "return=minimal")
+                }
+                messageDraft = ""
+                loadRoomMessages(requestId, token)
+            } catch (e: Exception) { message = e.message ?: "Could not send this message." }
+            busy = false
+        }
+    }
+
+    fun loadLeaderboard(token: String) {
+        scope.launch {
+            busy = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    val data = request("/rest/v1/swap_xp_awards?select=user_id,points,profiles!swap_xp_awards_user_id_fkey(display_name)&order=created_at.desc&limit=1000", token = token).optJSONArray("data") ?: JSONArray()
+                    val totals = linkedMapOf<String, Pair<String, Int>>()
+                    for (i in 0 until data.length()) {
+                        val item = data.getJSONObject(i)
+                        val id = item.optString("user_id")
+                        val name = item.optJSONObject("profiles")?.optString("display_name").orEmpty().ifBlank { "Member" }
+                        val previous = totals[id]
+                        totals[id] = name to ((previous?.second ?: 0) + item.optInt("points"))
+                    }
+                    totals.map { (id, pair) -> LeaderboardEntry(id, pair.first, pair.second) }.sortedByDescending { it.points }
+                }
+                leaderboard = result
+                message = "Leaderboard updated."
+            } catch (e: Exception) { message = e.message ?: "Could not load leaderboard." }
+            busy = false
+        }
+    }
+
+    fun loadNotifications(token: String) {
+        scope.launch {
+            busy = true
+            try {
+                val result = withContext(Dispatchers.IO) {
+                    val data = request("/rest/v1/notifications?select=id,type,title,body,is_read,created_at,request_id&order=created_at.desc&limit=50", token = token).optJSONArray("data") ?: JSONArray()
+                    (0 until data.length()).map { i ->
+                        val item = data.getJSONObject(i)
+                        AppNotification(item.optString("id"), item.optString("type"), item.optString("title"), item.optString("body"),
+                            item.optBoolean("is_read"), item.optString("created_at"), if (item.isNull("request_id")) null else item.optString("request_id"))
+                    }
+                }
+                notifications = result
+            } catch (e: Exception) { message = e.message ?: "Could not load notifications." }
+            busy = false
+        }
+    }
+
+    fun markNotificationRead(id: String) {
+        val token = accessToken ?: return
+        scope.launch {
+            try {
+                withContext(Dispatchers.IO) {
+                    request("/rest/v1/notifications?id=eq.$id", "PATCH", token, JSONObject().put("is_read", true), "return=minimal")
+                }
+                notifications = notifications.map { if (it.id == id) it.copy(isRead = true) else it }
+            } catch (e: Exception) { message = e.message ?: "Could not update notification." }
+        }
+    }
+
+    fun changeAccountPassword(currentPassword: String, newPassword: String) {
+        val token = accessToken ?: return
+        if (currentPassword.isBlank() || newPassword.length < 8) {
+            message = "Enter your current password and a new password with at least 8 characters."
+            return
+        }
+        scope.launch {
+            busy = true
+            try {
+                val verified = authRequest("/auth/v1/token?grant_type=password",
+                    JSONObject().put("email", email).put("password", currentPassword))
+                val freshToken = verified.optString("access_token").ifBlank { token }
+                withContext(Dispatchers.IO) {
+                    request("/auth/v1/user", "PUT", freshToken, JSONObject().put("password", newPassword))
+                }
+                message = "Password updated successfully."
+            } catch (e: Exception) { message = e.message ?: "Password could not be changed." }
             busy = false
         }
     }
