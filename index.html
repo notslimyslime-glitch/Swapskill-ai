@@ -161,7 +161,7 @@ function renderChatPage(){
 function selectChatRoom(id){
  const x=swaps.find(s=>s.id===id&&s.status==="accepted"&&!(s.sender_completed&&s.recipient_completed));if(!x)return;
  const outgoing=x.sender_id===user.id,other=people.find(p=>p.id===(outgoing?x.recipient_id:x.sender_id));
- document.getElementById("chatWorkspace").innerHTML='<article class="card mission-room"><div class="sectionhead"><h2>💬 '+esc(other?.display_name||"SkillSwap member")+'</h2><span class="tag">Private</span></div><div class="room-note">Only you and your swap partner can read and send messages. Keep phone numbers, addresses and social handles private.</div><div id="roomMessages_'+id+'" class="room-messages" aria-live="polite"></div><div class="room-compose"><textarea id="roomInput_'+id+'" maxlength="1000" placeholder="Write a message (max 1,000 characters)…"></textarea><button id="roomSend_'+id+'" onclick="sendRoomMessage(\''+id+'\')">Send</button></div></article>';
+ closeRoomChannels();document.getElementById("chatWorkspace").innerHTML='<article id="missionRoom_'+id+'" class="card mission-room hidden"><div class="sectionhead"><h2>💬 '+esc(other?.display_name||"SkillSwap member")+'</h2><span class="tag">Private</span></div><div class="room-note">Only you and your swap partner can read and send messages. Keep phone numbers, addresses and social handles private.</div><div id="roomMessages_'+id+'" class="room-messages" aria-live="polite"></div><div class="room-compose"><textarea id="roomInput_'+id+'" maxlength="1000" placeholder="Write a message (max 1,000 characters)…"></textarea><button id="roomSend_'+id+'" onclick="sendRoomMessage(\''+id+'\')">Send</button></div></article>';
  openMissionRoom(id);
 }
 
