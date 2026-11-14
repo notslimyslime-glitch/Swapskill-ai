@@ -430,19 +430,30 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                     busy = false
                 }
             }, onSignOut = { prefs.edit().remove("refresh_token").apply(); accessToken = null; userId = null; needsProfile = false })
+        } else if (showTutorial) {
+            TutorialScreen {
+                prefs.edit().putBoolean("tutorial_done", true).apply()
+                showTutorial = false
+            }
         } else {
             Scaffold(containerColor = BackgroundDark, bottomBar = {
-                NavigationBar(containerColor = SurfaceDark, contentColor = Cream) {
+                if (selectedRoom == null) NavigationBar(containerColor = SurfaceDark, contentColor = Cream) {
                     listOf(Triple("Discover", Icons.Default.Explore, "Discover"), Triple("Swaps", Icons.Default.SwapHoriz, "Swaps"), Triple("Rooms", Icons.Default.Groups, "Rooms"), Triple("Ranks", Icons.Default.Leaderboard, "Ranks")).forEach { (label, icon, route) ->
-                        NavigationBarItem(selected = tab == route, onClick = { tab = route }, icon = { Icon(icon, label) }, label = { Text(label, fontSize = 10.sp) }, colors = NavigationBarItemDefaults.colors(selectedIconColor = Cream, selectedTextColor = Cream, indicatorColor = ForestLight, unselectedIconColor = Muted, unselectedTextColor = Muted))
+                        NavigationBarItem(selected = tab == route, onClick = {
+                            tab = route
+                            if (route == "Ranks") accessToken?.let { loadLeaderboard(it) }
+                            if (route == "Rooms") selectedRoom = null
+                        }, icon = { Icon(icon, label) }, label = { Text(label, fontSize = 10.sp) }, colors = NavigationBarItemDefaults.colors(selectedIconColor = Cream, selectedTextColor = Cream, indicatorColor = ForestLight, unselectedIconColor = Muted, unselectedTextColor = Muted))
                     }
                 }
             }) { padding ->
                 when (tab) {
                     "Discover" -> DiscoverScreen(
                         Modifier.padding(padding), displayName, members, busy, message,
-                        swaps.filter { it.senderId == userId && it.status in listOf("pending", "accepted") }.map { it.recipientId }.toSet(),
-                        { tab = "Account" }, { loadMembers(accessToken!!) }, { sendSwapRequest(it) }
+                        swaps.filter { (it.senderId == userId || it.recipientId == userId) && it.status in listOf("pending", "accepted") }
+                            .map { if (it.senderId == userId) it.recipientId else it.senderId }.toSet(),
+                        { tab = "Account" }, { loadMembers(accessToken!!) }, { sendSwapRequest(it) },
+                        { tab = "Notifications"; loadNotifications(accessToken!!) }
                     )
                     "Swaps" -> SwapsScreen(
                         Modifier.padding(padding), swaps, userId.orEmpty(), busy, message,
@@ -450,7 +461,29 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                         { id -> markSwapComplete(id) },
                         { accessToken?.let { loadSwaps(it) } }
                     )
-                    "Account" -> AccountScreen(Modifier.padding(padding), displayName, email, teaches, learns, about, message, { needsProfile = true }, { prefs.edit().remove("refresh_token").apply(); accessToken = null; userId = null; members = emptyList(); tab = "Discover"; message = "Signed out." })
+                    "Rooms" -> {
+                        val room = selectedRoom
+                        if (room == null) RoomsScreen(Modifier.padding(padding), swaps, userId.orEmpty()) {
+                            selectedRoom = it
+                            messageDraft = ""
+                            loadRoomMessages(it.id, accessToken!!)
+                        } else MissionRoomScreen(
+                            Modifier.padding(padding), room, userId.orEmpty(), roomMessages, messageDraft,
+                            { messageDraft = it }, busy,
+                            { sendRoomMessage(room.id) },
+                            { accessToken?.let { token -> loadRoomMessages(room.id, token) } },
+                            { selectedRoom = null; roomMessages = emptyList() }
+                        )
+                    }
+                    "Ranks" -> LeaderboardScreen(Modifier.padding(padding), leaderboard, busy, message) { accessToken?.let { loadLeaderboard(it) } }
+                    "Notifications" -> NotificationsScreen(Modifier.padding(padding), notifications, busy,
+                        { markNotificationRead(it) }, { tab = "Discover" }, { accessToken?.let { loadNotifications(it) } })
+                    "Account" -> AccountScreen(Modifier.padding(padding), displayName, email, teaches, learns, about, message,
+                        { needsProfile = true },
+                        { current, next -> changeAccountPassword(current, next) },
+                        { showTutorial = true },
+                        { tab = "Discover" },
+                        { prefs.edit().remove("refresh_token").apply(); accessToken = null; userId = null; members = emptyList(); swaps = emptyList(); selectedRoom = null; tab = "Discover"; message = "Signed out." })
                     else -> PlaceholderScreen(tab, Modifier.padding(padding))
                 }
             }
@@ -499,7 +532,7 @@ private fun ProfileSetupScreen(name: String, setName: (String) -> Unit, teach: S
 private fun DiscoverScreen(
     modifier: Modifier, name: String, members: List<Member>, busy: Boolean, message: String,
     requestedMemberIds: Set<String>, onAccount: () -> Unit, onRefresh: () -> Unit,
-    onRequestSwap: (String) -> Unit
+    onRequestSwap: (String) -> Unit, onNotifications: () -> Unit
 ) {
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         item {
@@ -508,6 +541,7 @@ private fun DiscoverScreen(
                     Text("SKILLSWAP AI", color = Color(0xFF9BC69A), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                     Text("Hey, $name!", color = Cream, fontSize = 27.sp, fontWeight = FontWeight.Bold)
                 }
+                TextButton(onClick = onNotifications) { Text("Inbox", color = Color(0xFF9BC69A)) }
                 IconButton(onClick = onAccount) { Icon(Icons.Default.AccountCircle, "Account", tint = Cream) }
             }
         }
@@ -607,17 +641,33 @@ private fun SwapCard(
 }
 
 @Composable
-private fun AccountScreen(modifier: Modifier, name: String, email: String, teach: String, learn: String, about: String, message: String, edit: () -> Unit, signOut: () -> Unit) {
-    Column(modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        Text("‹  Account", color = Color(0xFF9BC69A), fontSize = 14.sp)
+private fun AccountScreen(
+    modifier: Modifier, name: String, email: String, teach: String, learn: String, about: String, message: String,
+    edit: () -> Unit, onPasswordChange: (String, String) -> Unit, onReplayTutorial: () -> Unit,
+    onBack: () -> Unit, signOut: () -> Unit
+) {
+    var currentPassword by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var showPasswords by remember { mutableStateOf(false) }
+    Column(modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        TextButton(onClick = onBack) { Text("‹ Back to Discover", color = Color(0xFF9BC69A)) }
         Text(name, color = Cream, fontSize = 28.sp, fontWeight = FontWeight.Bold)
         Text(email, color = Muted)
         Text("I can teach: $teach", color = Cream)
         Text("I want to learn: $learn", color = Cream)
         if (about.isNotBlank()) Text(about, color = Muted)
+        Button(onClick = edit, modifier = Modifier.fillMaxWidth()) { Text("Edit profile") }
+        Divider(color = ForestLight)
+        Text("CHANGE PASSWORD", color = Color(0xFF9BC69A), fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.sp)
+        OutlinedTextField(currentPassword, { currentPassword = it }, label = { Text("Current password") }, singleLine = true,
+            visualTransformation = if (showPasswords) VisualTransformation.None else PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+        OutlinedTextField(newPassword, { newPassword = it }, label = { Text("New password (8+ characters)") }, singleLine = true,
+            visualTransformation = if (showPasswords) VisualTransformation.None else PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+        TextButton(onClick = { showPasswords = !showPasswords }) { Text(if (showPasswords) "Hide passwords" else "Show passwords") }
+        Button(onClick = { onPasswordChange(currentPassword, newPassword) }, modifier = Modifier.fillMaxWidth()) { Text("Update password") }
+        OutlinedButton(onClick = onReplayTutorial, modifier = Modifier.fillMaxWidth()) { Text("Replay tutorial") }
         Text(message, color = Muted, fontSize = 12.sp)
-        Button(onClick = edit) { Text("Edit profile") }
-        OutlinedButton(onClick = signOut) { Text("Sign out") }
+        OutlinedButton(onClick = signOut, modifier = Modifier.fillMaxWidth()) { Text("Sign out") }
     }
 }
 
