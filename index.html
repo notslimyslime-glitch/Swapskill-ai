@@ -81,6 +81,26 @@ html[data-theme="light"]{color-scheme:light;--muted:#657096;--line:rgba(74,78,15
   .tutorial-actions button{width:100%;min-width:0}
 }
 
+
+/* Account hero tagline and teach/learn spacing */
+.account-identity{display:flex;align-items:center;gap:16px;margin:22px 0 24px;min-width:0}
+.account-identity>div:last-child{min-width:0}
+.account-identity h1{margin:4px 0 8px;line-height:1.12;overflow-wrap:anywhere}
+.account-identity p{margin:0;line-height:1.6;max-width:46ch}
+.account-skill-preview{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:16px;margin-top:24px;padding:17px 18px;border:1px solid rgba(190,178,255,.22);border-radius:16px;background:rgba(10,14,48,.3)}
+.account-skill-preview>div{display:flex;flex-direction:column;gap:8px;min-width:0}
+.account-skill-preview small{font-size:10px;letter-spacing:.12em;line-height:1.4;color:#c3c8ed;font-weight:800}
+.account-skill-preview strong{display:block;font-size:clamp(16px,2vw,21px);line-height:1.3;overflow-wrap:anywhere}
+.account-swap-icon{display:grid;place-items:center;width:36px;height:36px;border-radius:50%;background:rgba(139,92,246,.2);font-size:20px}
+@media(max-width:620px){
+ .account-identity{align-items:flex-start;gap:12px;margin:18px 0 20px}
+ .account-identity p{font-size:13px;line-height:1.55}
+ .account-skill-preview{grid-template-columns:minmax(0,1fr);gap:12px;margin-top:18px;padding:15px}
+ .account-skill-preview>div{gap:5px}
+ .account-swap-icon{width:30px;height:30px;transform:rotate(90deg);margin:0 auto}
+ .account-skill-preview strong{font-size:18px}
+}
+
 </style>
 </head>
 <script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
