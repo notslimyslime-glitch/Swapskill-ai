@@ -17,6 +17,36 @@ html[data-theme="light"]{color-scheme:light;--muted:#657096;--line:rgba(74,78,15
 @media(max-width:900px){.wrap{margin-left:205px;padding:0 22px 40px}.tabs{width:205px}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.account-layout{grid-template-columns:1fr}}
 @media(max-width:620px){.wrap{margin:0;padding:0 15px 90px}.top{height:78px;margin-bottom:18px}.brand:before{width:38px;height:38px}.brand span{font-size:18px}.tabs{top:auto;right:0;bottom:0;width:100%;height:70px;padding:7px 5px calc(7px + env(safe-area-inset-bottom));border-right:0;border-top:1px solid var(--line);flex-direction:row;justify-content:space-around;gap:2px;background:rgba(8,12,39,.94)}.tabs:before{display:none}.tabs button{width:auto;flex:1;justify-content:center;flex-direction:column;gap:1px;padding:6px 2px;font-size:10px}.tab-icon{font-size:17px}.theme-toggle{position:static!important;width:42px!important;height:42px!important;min-width:42px!important;padding:0!important;border-radius:50%!important}.theme-toggle-label{display:none}.top-actions{gap:6px}.top-actions button{width:38px;height:38px}.hero{padding:25px 22px}.hero h1{font-size:37px}.stats{gap:9px}.stat{padding:15px;min-height:95px}.stat strong{font-size:26px}.stat small{font-size:10px}.sectionhead h2{font-size:20px}.filters>*{width:100%}.account-form-grid{grid-template-columns:1fr}.account-save-row{align-items:flex-start;flex-direction:column}.notification-hero,.leaderboard-hero,.account-hero{padding:22px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* Discover spacing and skill-profile card layout fixes */
+.hero p{margin:12px 0 0;line-height:1.7}
+.hero>button{margin-top:20px}
+#discoverResults>.sectionhead{margin-bottom:12px}
+#discoverResults>.sectionhead+.muted{margin:0 0 18px;line-height:1.65}
+.match-intro{margin:0 0 18px;line-height:1.65}
+.match-card{display:flex;flex-direction:column;gap:0;min-width:0}
+.match-card .person{align-items:center;gap:14px;margin-bottom:15px;min-width:0}
+.match-card .person>div:last-child{min-width:0}
+.match-card .person h3{font-size:17px;line-height:1.3;overflow-wrap:anywhere}
+.match-card .match{display:block;margin-top:5px;font-size:12px;line-height:1.45}
+.match-track{height:6px;overflow:hidden;border-radius:99px;background:rgba(153,145,221,.2);margin:0 0 14px}
+.match-track span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#8b5cf6,#53e5c0)}
+.match-reasons{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 12px}
+.match-reason{display:inline-flex;align-items:center;padding:5px 9px;border-radius:8px;background:rgba(139,92,246,.14);border:1px solid rgba(167,139,250,.2);font-size:11px;line-height:1.35;color:#d8ceff}
+.match-card .match-about{margin:0 0 14px;line-height:1.65;overflow-wrap:anywhere}
+.profile-skill-tags{display:flex;flex-wrap:wrap;gap:7px;margin:0 0 15px}
+.profile-skill-tags .tag{margin:0}
+.match-skill-grid{display:grid;grid-template-columns:1fr;gap:10px;margin:0 0 16px;padding:13px;border-radius:13px;background:rgba(9,15,48,.32);border:1px solid rgba(155,145,255,.16)}
+.match-skill-grid>div{display:grid;grid-template-columns:108px minmax(0,1fr);align-items:center;gap:8px;min-width:0}
+.match-skill-grid small{font-size:11px;font-weight:800;color:#aeb7df}
+.match-skill-grid .tag{justify-self:start;max-width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.4;margin:0}
+.match-card>button{width:100%;margin:0 0 10px}
+.request-profile-hint{margin:0 0 12px!important;font-size:11px;line-height:1.5}
+.member-safety-actions{display:flex;justify-content:flex-end;gap:8px;padding-top:10px;border-top:1px solid rgba(155,145,255,.15)}
+.member-safety-actions button{margin:0!important;padding:6px 10px;font-size:11px;background:rgba(130,139,198,.12);border:1px solid rgba(155,145,255,.2);box-shadow:none}
+@media(min-width:900px){.match-skill-grid{grid-template-columns:1fr 1fr}.match-skill-grid>div:last-child{grid-column:1/-1}}
+@media(max-width:620px){.hero>button{width:100%;margin-top:18px}.match-card{padding:17px}.match-skill-grid{grid-template-columns:1fr}.match-skill-grid>div{grid-template-columns:100px minmax(0,1fr)}}
+
 </style>
 </head>
 <script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
