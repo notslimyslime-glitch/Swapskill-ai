@@ -49,6 +49,38 @@ html[data-theme="light"]{color-scheme:light;--muted:#657096;--line:rgba(74,78,15
 .match-skill-grid>div{grid-column:auto!important}
 @media(max-width:620px){.hero>button{width:100%;margin-top:18px}.match-card{padding:17px}.match-skill-grid{grid-template-columns:1fr}.match-skill-grid>div{grid-template-columns:100px minmax(0,1fr)}}
 
+
+/* Account and tutorial button spacing */
+.account-security-panel .account-secondary-btn,
+.account-panel .account-secondary-btn{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:100%;
+  min-height:44px;
+  margin:10px 0 0!important;
+  white-space:normal;
+  line-height:1.35;
+}
+.tutorial-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-top:18px;
+}
+.tutorial-actions button{
+  flex:0 1 auto;
+  min-width:112px;
+  min-height:42px;
+  margin:0!important;
+}
+@media(max-width:520px){
+  .tutorial-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .tutorial-actions button{width:100%;min-width:0}
+}
+
 </style>
 </head>
 <script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
