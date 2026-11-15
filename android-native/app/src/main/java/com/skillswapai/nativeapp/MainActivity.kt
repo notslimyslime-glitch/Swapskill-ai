@@ -587,6 +587,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                         tab = "Discover"
                         loadBlockedMembers(token)
                         loadSwaps(token)
+                        loadLeaderboard(token)
                     }
                 } catch (e: Exception) { message = e.message ?: "Signed in, but profile loading failed." }
                 busy = false
@@ -638,7 +639,9 @@ private fun SkillSwapApp(activity: ComponentActivity) {
             activity.window.statusBarColor = systemBar
             activity.window.navigationBarColor = systemBar
         }
-        if (accessToken == null) {
+        if (accessToken == null && busy) {
+            LoadingLaunchScreen(message.ifBlank { "Getting your SkillSwap ready…" })
+        } else if (accessToken == null) {
             AuthScreen(authMode, { authMode = it }, emailInput, { emailInput = it }, passwordInput, { passwordInput = it }, busy, message, {
                 if (emailInput.isBlank() || passwordInput.length < 8) { message = "Enter a valid email and a password with at least 8 characters." }
                 else scope.launch {
@@ -676,15 +679,35 @@ private fun SkillSwapApp(activity: ComponentActivity) {
             }
         } else {
             val hapticFeedback = LocalHapticFeedback.current
-            Scaffold(containerColor = MaterialTheme.colorScheme.background, bottomBar = {
+            Scaffold(containerColor = MaterialTheme.colorScheme.background, topBar = {
+                if (tab != "Discover" && tab != "Account" && tab != "Notifications" && tab != "Settings" && selectedRoom == null) {
+                    Row(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(horizontal = 12.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
+                        Text(tab, color = Cream, fontWeight = FontWeight.Bold, fontSize = 18.sp, modifier = Modifier.weight(1f))
+                        IconButton(onClick = { tab = "Notifications"; accessToken?.let { loadNotifications(it) } }) {
+                            Icon(Icons.Default.Email, "Inbox", tint = MaterialTheme.colorScheme.primary)
+                        }
+                        IconButton(onClick = { tab = "Account" }) {
+                            Icon(Icons.Default.AccountCircle, "Account", tint = Cream)
+                        }
+                    }
+                }
+            }, bottomBar = {
                 if (selectedRoom == null) NavigationBar(containerColor = MaterialTheme.colorScheme.surface, contentColor = Cream) {
-                    listOf(Triple("Discover", Icons.Default.Explore, "Discover"), Triple("Match", Icons.Default.AutoAwesome, "Match"), Triple("Swaps", Icons.Default.SwapHoriz, "Swaps"), Triple("Rooms", Icons.Default.Groups, "Rooms"), Triple("Ranks", Icons.Default.Leaderboard, "Ranks")).forEach { (label, icon, route) ->
+                    listOf(Triple("Discover", Icons.Default.Explore, "Discover"), Triple("Match", Icons.Default.AutoAwesome, "Match"), Triple("Rooms", Icons.Default.Groups, "Rooms"), Triple("Swaps", Icons.Default.SwapHoriz, "Swaps"), Triple("Ranks", Icons.Default.Leaderboard, "Ranks")).forEach { (label, icon, route) ->
                         NavigationBarItem(selected = tab == route, onClick = {
                             if (hapticsEnabled) hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             tab = route
                             if (route == "Ranks") accessToken?.let { loadLeaderboard(it) }
                             if (route == "Rooms") selectedRoom = null
-                        }, icon = { Icon(icon, label) }, label = { Text(label, fontSize = 10.sp) }, colors = NavigationBarItemDefaults.colors(selectedIconColor = Cream, selectedTextColor = Cream, indicatorColor = MaterialTheme.colorScheme.tertiary, unselectedIconColor = Muted, unselectedTextColor = Muted))
+                        }, icon = {
+                            Box {
+                                Icon(icon, label)
+                                if (route == "Rooms" && notifications.any { !it.isRead }) {
+                                    Box(Modifier.align(Alignment.TopEnd).size(8.dp).clip(CircleShape).background(Color(0xFFE47D70)))
+                                }
+                            }
+                        }, label = { Text(label, fontSize = 10.sp) }, colors = NavigationBarItemDefaults.colors(selectedIconColor = Cream, selectedTextColor = Cream, indicatorColor = MaterialTheme.colorScheme.tertiary, unselectedIconColor = Muted, unselectedTextColor = Muted))
                     }
                 }
             }) { padding ->
@@ -703,8 +726,10 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                         Modifier.padding(padding), displayName, members, busy, message,
                         swaps.filter { (it.senderId == userId || it.recipientId == userId) && it.status in listOf("pending", "accepted") }
                             .map { if (it.senderId == userId) it.recipientId else it.senderId }.toSet(),
+                        swaps.filter { it.status == "accepted" }.associateBy { if (it.senderId == userId) it.recipientId else it.senderId },
                         { tab = "Account" }, { loadMembers(accessToken!!) }, { sendSwapRequest(it) },
                         { tab = "Notifications"; loadNotifications(accessToken!!) },
+                        { room -> selectedRoom = room; tab = "Rooms"; messageDraft = ""; loadRoomMessages(room.id, accessToken!!); loadRoomPlan(room.id, accessToken!!) },
                         { blockMember(it) }, { member, reason, details -> reportMember(member, reason, details) }
                     )
                     "Match" -> MatchmakingScreen(
@@ -751,9 +776,11 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                         Modifier.padding(padding), displayName, email, teaches, learns, about, avatarEmoji, message,
                         { tab = "EditAccount" }, { tab = "EditSkills" },
                         { current, next -> changeAccountPassword(current, next) },
-                        { showTutorial = true }, { tab = "Settings" }, { tab = "Discover" },
+                        { showTutorial = true }, { tab = "Settings" }, { tab = "About" }, { tab = "NotificationSettings" }, { tab = "Discover" },
                         { prefs.edit().remove("refresh_token").apply(); accessToken = null; userId = null; members = emptyList(); swaps = emptyList(); selectedRoom = null; tab = "Discover"; message = "Signed out." }
                     )
+                    "About" -> AboutAppScreen(Modifier.padding(padding)) { tab = "Account" }
+                    "NotificationSettings" -> NotificationPreferencesScreen(Modifier.padding(padding), uiPrefs) { tab = "Account" }
                     "EditAccount" -> AccountDetailsEditorScreen(
                         Modifier.padding(padding), displayName, about, avatarEmoji, busy,
                         { name, bio, avatar -> updateAccountDetails(name, bio, avatar) }, { tab = "Account" }
@@ -766,6 +793,21 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                 }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun LoadingLaunchScreen(status: String) {
+    Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.background))),
+        contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Box(Modifier.size(82.dp).clip(RoundedCornerShape(28.dp)).background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.Center) {
+                Icon(Icons.Default.AutoAwesome, "SkillSwap AI", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(42.dp))
+            }
+            Text("SKILLSWAP AI", color = Cream, fontSize = 24.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = 2.sp)
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
+            Text(status, color = Muted, fontSize = 12.sp)
         }
     }
 }
@@ -837,10 +879,17 @@ private fun ProfileSetupScreen(name: String, setName: (String) -> Unit, teach: S
 @Composable
 private fun DiscoverScreen(
     modifier: Modifier, name: String, members: List<Member>, busy: Boolean, message: String,
-    requestedMemberIds: Set<String>, onAccount: () -> Unit, onRefresh: () -> Unit,
+    requestedMemberIds: Set<String>, acceptedRoomsByMember: Map<String, Swap>,
+    onAccount: () -> Unit, onRefresh: () -> Unit,
     onRequestSwap: (String) -> Unit, onNotifications: () -> Unit,
-    onBlock: (Member) -> Unit, onReport: (Member, String, String) -> Unit
+    onOpenRoom: (Swap) -> Unit, onBlock: (Member) -> Unit, onReport: (Member, String, String) -> Unit
 ) {
+    var searchQuery by remember { mutableStateOf("") }
+    val visibleMembers = remember(members, searchQuery) {
+        if (searchQuery.isBlank()) members else members.filter {
+            listOf(it.name, it.teaches, it.learns, it.about).any { value -> value.contains(searchQuery, ignoreCase = true) }
+        }
+    }
     var blockTarget by remember { mutableStateOf<Member?>(null) }
     var reportTarget by remember { mutableStateOf<Member?>(null) }
     var reportReason by remember { mutableStateOf("Inappropriate behaviour") }
@@ -852,7 +901,7 @@ private fun DiscoverScreen(
                     Text("SKILLSWAP AI", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
                     Text("Hey, $name!", color = Cream, fontSize = 27.sp, fontWeight = FontWeight.Bold)
                 }
-                TextButton(onClick = onNotifications) { Text("Inbox", color = MaterialTheme.colorScheme.primary) }
+                IconButton(onClick = onNotifications) { Icon(Icons.Default.Email, "Inbox", tint = MaterialTheme.colorScheme.primary) }
                 IconButton(onClick = onAccount) { Icon(Icons.Default.AccountCircle, "Account", tint = Cream) }
             }
         }
@@ -878,18 +927,46 @@ private fun DiscoverScreen(
                 }
             }
         }
-        item { Row(verticalAlignment = Alignment.CenterVertically) { Column(Modifier.weight(1f)) { Text("Explore the community", color = Cream, fontSize = 19.sp, fontWeight = FontWeight.Bold); Text(message, color = Muted, fontSize = 11.sp) }; TextButton(onClick = onRefresh) { Text("Refresh") } } }
-        if (members.isEmpty()) item { Text(if (busy) "Loading members…" else "No other profiles yet. Invite a friend to join SkillSwap!", color = Muted, modifier = Modifier.padding(12.dp)) }
-        items(members, key = { it.id }) { member ->
+        item {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("Explore the community", color = Cream, fontSize = 19.sp, fontWeight = FontWeight.Bold)
+                    Text(message, color = Muted, fontSize = 11.sp)
+                }
+                IconButton(onClick = onRefresh) { Icon(Icons.Default.Refresh, "Refresh discovery", tint = Cream) }
+            }
+            OutlinedTextField(value = searchQuery, onValueChange = { searchQuery = it },
+                modifier = Modifier.fillMaxWidth(), singleLine = true,
+                placeholder = { Text("Search people or skills") },
+                leadingIcon = { Icon(Icons.Default.Search, "Search") })
+        }
+        if (visibleMembers.isEmpty()) item { Text(if (busy) "Loading members…" else if (searchQuery.isNotBlank()) "No profiles match that search." else "No other profiles yet. Invite a friend to join SkillSwap!", color = Muted, modifier = Modifier.padding(12.dp)) }
+        items(visibleMembers, key = { it.id }) { member ->
             Column(Modifier.fillMaxWidth().animateContentSize().clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp)) {
-                Text(member.name, color = Cream, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Box(Modifier.size(46.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondary), contentAlignment = Alignment.Center) {
+                        Text(member.avatarEmoji, fontSize = 23.sp)
+                    }
+                    Column(Modifier.weight(1f)) {
+                        Text(member.name, color = Cream, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                        Text("SkillSwap member", color = Muted, fontSize = 10.sp)
+                    }
+                }
+                Spacer(Modifier.height(8.dp))
                 Text("Can teach: ${member.teaches}", color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
                 Text("Wants to learn: ${member.learns}", color = Muted, fontSize = 13.sp)
                 if (member.about.isNotBlank()) Text(member.about, color = Muted, fontSize = 12.sp)
                 Spacer(Modifier.height(10.dp))
+                val acceptedRoom = acceptedRoomsByMember[member.id]
                 val alreadyRequested = member.id in requestedMemberIds
-                Button(onClick = { onRequestSwap(member.id) }, enabled = !busy && !alreadyRequested, modifier = Modifier.fillMaxWidth()) {
-                    Text(if (alreadyRequested) "Request sent / swap active" else "Request a skill swap")
+                if (acceptedRoom != null) {
+                    Button(onClick = { onOpenRoom(acceptedRoom) }, modifier = Modifier.fillMaxWidth()) {
+                        Text("Open your chat")
+                    }
+                } else {
+                    Button(onClick = { onRequestSwap(member.id) }, enabled = !busy && !alreadyRequested, modifier = Modifier.fillMaxWidth()) {
+                        Text(if (alreadyRequested) "Request pending" else "Request a skill swap")
+                    }
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.End) {
                     TextButton(onClick = { blockTarget = member }) { Text("Block", color = Muted) }
@@ -1008,7 +1085,8 @@ private fun SwapCard(
 private fun AccountScreen(
     modifier: Modifier, name: String, email: String, teach: String, learn: String, about: String, avatar: String, message: String,
     editAccount: () -> Unit, editSkills: () -> Unit, onPasswordChange: (String, String) -> Unit,
-    onReplayTutorial: () -> Unit, onSettings: () -> Unit, onBack: () -> Unit, signOut: () -> Unit
+    onReplayTutorial: () -> Unit, onSettings: () -> Unit, onAbout: () -> Unit,
+    onNotificationSettings: () -> Unit, onBack: () -> Unit, signOut: () -> Unit
 ) {
     var currentPassword by remember { mutableStateOf("") }
     var newPassword by remember { mutableStateOf("") }
@@ -1048,6 +1126,8 @@ private fun AccountScreen(
             Text("PERSONALISE", color = Cream, fontWeight = FontWeight.Bold, fontSize = 15.sp)
             OutlinedButton(onClick = editAccount, modifier = Modifier.fillMaxWidth()) { Text("Edit account details") }
             OutlinedButton(onClick = onSettings, modifier = Modifier.fillMaxWidth()) { Text("Customise app appearance") }
+            OutlinedButton(onClick = onNotificationSettings, modifier = Modifier.fillMaxWidth()) { Text("Manage notifications") }
+            OutlinedButton(onClick = onAbout, modifier = Modifier.fillMaxWidth()) { Text("About SkillSwap AI") }
             OutlinedButton(onClick = onReplayTutorial, modifier = Modifier.fillMaxWidth()) { Text("Replay app tour") }
         }
         Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -1063,6 +1143,36 @@ private fun AccountScreen(
         }
         Text(message, color = Muted, fontSize = 12.sp)
         OutlinedButton(onClick = signOut, modifier = Modifier.fillMaxWidth()) { Text("Sign out") }
+    }
+}
+
+@Composable
+private fun AboutAppScreen(modifier: Modifier, onBack: () -> Unit) {
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(20.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+        TextButton(onClick = onBack) { Text("‹ Back to account", color = MaterialTheme.colorScheme.primary) }
+        Text("ABOUT THE APP", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
+        Text("SkillSwap AI", color = Cream, fontSize = 29.sp, fontWeight = FontWeight.Bold)
+        Text("Created by Mayank & Harsh", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+        Text("A community where people exchange knowledge instead of money. Teach something you know, learn something new, and grow together through skill swaps.", color = Muted, fontSize = 14.sp)
+        Text("Inspiration: Yaku (Atharv)", color = Muted, fontSize = 12.sp)
+    }
+}
+
+@Composable
+private fun NotificationPreferencesScreen(modifier: Modifier, prefs: android.content.SharedPreferences, onBack: () -> Unit) {
+    var requests by remember { mutableStateOf(prefs.getBoolean("notify_requests", true)) }
+    var updates by remember { mutableStateOf(prefs.getBoolean("notify_status", true)) }
+    Column(modifier.fillMaxSize().padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        TextButton(onClick = onBack) { Text("‹ Back to account", color = MaterialTheme.colorScheme.primary) }
+        Text("MANAGE NOTIFICATIONS", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+        Text("Choose what appears in your inbox", color = Cream, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        SettingsSwitchRow("New swap requests", "Show incoming request updates.", requests) {
+            requests = it; prefs.edit().putBoolean("notify_requests", it).apply()
+        }
+        SettingsSwitchRow("Swap status updates", "Show accepted, declined and completed updates.", updates) {
+            updates = it; prefs.edit().putBoolean("notify_status", it).apply()
+        }
+        Text("These preferences are saved on this device. Push alerts need notification-service setup.", color = Muted, fontSize = 11.sp)
     }
 }
 
