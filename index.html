@@ -44,7 +44,9 @@ html[data-theme="light"]{color-scheme:light;--muted:#657096;--line:rgba(74,78,15
 .request-profile-hint{margin:0 0 12px!important;font-size:11px;line-height:1.5}
 .member-safety-actions{display:flex;justify-content:flex-end;gap:8px;padding-top:10px;border-top:1px solid rgba(155,145,255,.15)}
 .member-safety-actions button{margin:0!important;padding:6px 10px;font-size:11px;background:rgba(130,139,198,.12);border:1px solid rgba(155,145,255,.2);box-shadow:none}
-@media(min-width:900px){.match-skill-grid{grid-template-columns:1fr 1fr}.match-skill-grid>div:last-child{grid-column:1/-1}}
+/* Keep profile skill details stacked for a clean, readable card */
+.match-skill-grid{grid-template-columns:1fr!important}
+.match-skill-grid>div{grid-column:auto!important}
 @media(max-width:620px){.hero>button{width:100%;margin-top:18px}.match-card{padding:17px}.match-skill-grid{grid-template-columns:1fr}.match-skill-grid>div{grid-template-columns:100px minmax(0,1fr)}}
 
 </style>
