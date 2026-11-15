@@ -184,6 +184,22 @@ html[data-theme="light"] .chat-list-copy strong{color:#252044}
 html[data-theme="light"] .chat-preview{color:#68708f}
 @media(max-width:620px){.chat-list{gap:10px}.chat-list-item{padding:13px;gap:11px;border-radius:15px}.chat-list-item>.avatar{width:46px;height:46px;flex-basis:46px}.chat-preview{font-size:12px}.chat-meta{font-size:10px}}
 
+/* About SkillSwap page */
+.about-hero{position:relative;overflow:hidden;margin:10px 0 22px;padding:clamp(25px,5vw,46px);border:1px solid rgba(176,153,255,.28);border-radius:28px;background:radial-gradient(circle at 85% 15%,rgba(139,92,246,.3),transparent 34%),linear-gradient(135deg,#171735,#25205a 58%,#152b50);color:#fff;box-shadow:0 18px 45px rgba(12,10,40,.18)}
+.about-mark{display:grid;place-items:center;width:48px;height:48px;margin-bottom:20px;border-radius:16px;background:linear-gradient(135deg,#a78bfa,#67dce2);color:#171735;font-size:27px}
+.about-hero .eyebrow{color:#c8b9ff}.about-hero h1{max-width:700px;margin:12px 0;font-size:clamp(34px,6vw,58px);line-height:1.04;letter-spacing:-.045em}.about-hero h1 em{color:#bda9ff;font-style:normal}.about-hero>p{max-width:690px;color:#e1def7;font-size:clamp(15px,2vw,18px);line-height:1.75}
+.about-student-pill{display:inline-flex;margin-top:12px;padding:9px 13px;border:1px solid rgba(255,255,255,.2);border-radius:99px;background:rgba(255,255,255,.09);font-size:12px;font-weight:800;letter-spacing:.04em}
+.about-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
+.about-card{min-width:0;padding:23px;border:1px solid var(--line,rgba(150,145,190,.22));border-radius:21px;background:var(--card,rgba(255,255,255,.055));box-shadow:0 10px 28px rgba(12,10,40,.07)}
+.about-card-icon{display:grid;place-items:center;width:42px;height:42px;margin-bottom:16px;border-radius:14px;background:rgba(145,117,255,.14);font-size:21px}
+.about-card .eyebrow{font-size:10px;letter-spacing:.12em}.about-card h2{margin:9px 0 10px;font-size:clamp(18px,2.4vw,23px);line-height:1.25}.about-card p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.7}
+.about-repo-card{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-top:16px;padding:23px;border:1px solid rgba(155,130,255,.32);border-radius:21px;background:linear-gradient(120deg,rgba(123,92,220,.13),rgba(68,190,204,.08))}
+.about-repo-card h2{margin:6px 0;font-size:21px}.about-repo-card p{margin:0;color:var(--muted);font-size:13px;line-height:1.6}
+.about-repo-link{flex-shrink:0;display:inline-flex;align-items:center;gap:10px;min-height:46px;padding:0 17px;border-radius:13px;background:linear-gradient(110deg,#8b6cf0,#5fbbd4);color:#fff!important;text-decoration:none;font-size:13px;font-weight:850;box-shadow:0 8px 20px rgba(105,94,210,.2)}
+.about-footer{padding:22px 0 8px;text-align:center;color:var(--muted);font-size:12px}
+html[data-theme="light"] .about-card{background:rgba(255,255,255,.82);border-color:#e4e0f1;box-shadow:0 10px 28px rgba(54,42,112,.06)}
+html[data-theme="light"] .about-repo-card{background:linear-gradient(120deg,#f0edff,#e9f8fa);border-color:#e1dcf5}
+@media(max-width:680px){.about-grid{grid-template-columns:1fr;gap:11px}.about-card{padding:19px}.about-repo-card{align-items:stretch;flex-direction:column;padding:19px}.about-repo-link{justify-content:center;width:100%;box-sizing:border-box}.about-hero{padding:25px 21px;border-radius:22px}.about-back{margin-bottom:4px}}
 /* First-launch onboarding: clear, guided spotlight, no blur */
 .tutorial-overlay{display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;padding:22px;background:rgba(5,8,27,.42);backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 .tutorial-overlay.open{display:flex}
@@ -227,7 +243,7 @@ html[data-theme="light"] .tutorial-quiet{color:#33266d!important;background:#f2e
  </section>
 </div>
 <main class="wrap">
-<header class="top"><div class="brand">Skill<span>Swap</span> ✳</div><div class="top-actions"><button class="tutorial-help" type="button" onclick="openTutorial()" aria-label="Open tutorial" title="How SkillSwap works">?</button><button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Switch to dark mode" title="Switch theme"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Night</span></button><button class="notification-shortcut" type="button" onclick="showTab('notifications')" aria-label="Open notifications" title="Notifications"><svg class="ui-icon ui-bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span id="notificationBadge" class="notification-badge hidden">0</span></button><button class="profile-shortcut" type="button" onclick="showTab('account')" aria-label="Open your profile" title="Your profile"><span id="navProfileAvatar">S</span></button></div></header>
+<header class="top"><div class="brand">Skill<span>Swap</span> ✳</div><div class="top-actions"><button class="tutorial-help" type="button" onclick="openAboutApp()" aria-label="About SkillSwap AI" title="About SkillSwap AI">?</button><button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Switch to dark mode" title="Switch theme"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Night</span></button><button class="notification-shortcut" type="button" onclick="showTab('notifications')" aria-label="Open notifications" title="Notifications"><svg class="ui-icon ui-bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span id="notificationBadge" class="notification-badge hidden">0</span></button><button class="profile-shortcut" type="button" onclick="showTab('account')" aria-label="Open your profile" title="Your profile"><span id="navProfileAvatar">S</span></button></div></header>
 <section id="account" class="page hidden">
 <button class="account-back" type="button" onclick="showTab(previousTab || 'discover')" aria-label="Go back" title="Back"><svg class="ui-icon ui-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h11"/></svg></button>
 <section class="account-hero">
@@ -310,6 +326,27 @@ html[data-theme="light"] .tutorial-quiet{color:#33266d!important;background:#f2e
  <div id="leaderboardRows" class="leaderboard-list"><div class="empty">Sign in to load the leaderboard.</div></div>
  <p class="muted leaderboard-note">XP is added automatically when both people confirm a swap is complete. Only your public display name and score appear here.</p>
 </section>
+<section id="aboutApp" class="page hidden">
+ <button class="account-back about-back" type="button" onclick="showTab(previousTab || 'discover')" aria-label="Go back" title="Back"><svg class="ui-icon ui-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h11"/></svg></button>
+ <div class="about-hero">
+  <div class="about-mark">✳</div>
+  <div class="eyebrow">THE STORY BEHIND THE SWAP</div>
+  <h1>Skills are better <em>shared.</em></h1>
+  <p>SkillSwap AI is a student-built community where you teach what you know and learn something new from someone else. No payment. Just a fair exchange of skills.</p>
+  <span class="about-student-pill">Made by students, for students</span>
+ </div>
+ <div class="about-grid">
+  <article class="about-card about-founders"><span class="about-card-icon">👋</span><div class="eyebrow">THE PEOPLE BEHIND IT</div><h2>Built by students who wanted a better way to learn.</h2><p><strong>Mayank</strong> · Founder<br><strong>Harsh</strong> · Co-founder</p><p>We’re building SkillSwap AI around one simple belief: everyone knows something worth teaching, and everyone has something left to learn.</p></article>
+  <article class="about-card"><span class="about-card-icon">🎯</span><div class="eyebrow">OUR PURPOSE</div><h2>Make learning a two-way street.</h2><p>Help students find people with complementary skills, connect through a swap, and learn together without making money the barrier.</p></article>
+  <article class="about-card"><span class="about-card-icon">🔁</span><div class="eyebrow">WHY IT’S DIFFERENT</div><h2>Trade knowledge, not cash.</h2><p>Instead of buying a lesson, offer a skill in return. Both people bring something to the table, so everyone gets to be both a learner and a teacher.</p></article>
+  <article class="about-card"><span class="about-card-icon">🧩</span><div class="eyebrow">HOW IT WORKS</div><h2>From a skill match to a real plan.</h2><p>Create your profile, discover compatible people, send a swap request, then use a private Mission Room to chat, set goals, plan tasks and track progress.</p></article>
+  <article class="about-card"><span class="about-card-icon">🏆</span><div class="eyebrow">GROW AS YOU GO</div><h2>Progress deserves a little celebration.</h2><p>Complete swaps, earn XP and see the community leaderboard grow. The point is not to compete harder, but to keep learning and helping others.</p></article>
+  <article class="about-card"><span class="about-card-icon">🛡️</span><div class="eyebrow">COMMUNITY FIRST</div><h2>Respect, safety and curiosity.</h2><p>Keep personal details private, treat other members respectfully, and use the report and block tools if an interaction feels uncomfortable.</p></article>
+ </div>
+ <div class="about-repo-card"><div><div class="eyebrow">OPEN THE HOOD</div><h2>Follow the build on GitHub</h2><p>Explore the source code, updates and what we’re building next.</p></div><a class="about-repo-link" href="https://github.com/notslimyslime-glitch/Swapskill-ai" target="_blank" rel="noopener noreferrer">View GitHub repository <span aria-hidden="true">↗</span></a></div>
+ <p class="about-footer">SkillSwap AI · Learn together. Grow together. ✳</p>
+</section>
+
 <section id="discover" class="page"><section class="hero"><div class="eyebrow">Learn together. Grow together.</div><h1>Your skills are<br>someone's <em>superpower.</em></h1><p>Swap what you know for what you want to learn. No money needed, just skills, curiosity and a little teamwork.</p><button type="button" onclick="document.getElementById('discoverResults').scrollIntoView({behavior:'smooth',block:'start'});document.getElementById('search').focus({preventScroll:true})">Find my skill match ↗</button></section>
 <section class="stats"><div class="stat"><strong id="skillStat">0</strong><small>Skills listed</small></div><div class="stat"><strong id="requestStat">0</strong><small>Swap requests</small></div><div class="stat"><strong id="activeSwapStat">0</strong><small>Active swaps</small></div></section>
 
@@ -333,7 +370,7 @@ let profile=JSON.parse(localStorage.getItem("ss_profile")||"{}");
 let requests=JSON.parse(localStorage.getItem("ss_requests")||"[]");
 function esc(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
 let previousTab="discover";
-function showTab(tab){if(tab!=="account"&&tab!=="roomPage"&&tab!=="notifications")previousTab=tab;document.body.classList.toggle("account-open",tab==="account");document.body.classList.toggle("notifications-open",tab==="notifications");document.body.classList.toggle("room-open",tab==="roomPage");const hideTabs=tab==="notifications"||tab==="roomPage";document.querySelector(".tabs")?.classList.toggle("hidden",hideTabs);document.querySelectorAll(".page").forEach(x=>x.classList.toggle("hidden",x.id!==tab));document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===(tab==="roomPage"?"chat":tab)));if(tab==="activity")renderRequests();if(tab==="leaderboard")renderLeaderboard();if(tab==="swaps")renderSwaps();if(tab==="account")fillProfile();if(tab==="chat")renderChatPage();if(tab==="notifications")renderNotifications();history.replaceState(null,"",tab==="roomPage"?"#room-"+(activeRoomId||""):"#"+tab)}
+function showTab(tab){if(tab!=="account"&&tab!=="roomPage"&&tab!=="notifications"&&tab!=="aboutApp")previousTab=tab;document.body.classList.toggle("account-open",tab==="account");document.body.classList.toggle("notifications-open",tab==="notifications");document.body.classList.toggle("room-open",tab==="roomPage");const hideTabs=tab==="notifications"||tab==="roomPage";document.querySelector(".tabs")?.classList.toggle("hidden",hideTabs);document.querySelectorAll(".page").forEach(x=>x.classList.toggle("hidden",x.id!==tab));document.querySelectorAll(".tabs button").forEach(x=>x.classList.toggle("active",x.dataset.tab===(tab==="roomPage"?"chat":tab)));if(tab==="activity")renderRequests();if(tab==="leaderboard")renderLeaderboard();if(tab==="swaps")renderSwaps();if(tab==="account")fillProfile();if(tab==="chat")renderChatPage();if(tab==="notifications")renderNotifications();history.replaceState(null,"",tab==="roomPage"?"#room-"+(activeRoomId||""):"#"+tab)}
 
 const tutorialSteps=[
  {title:"Welcome to SkillSwap ✳",description:"SkillSwap AI is a student skill-exchange community. Teach something you know, learn something new, and swap skills without paying money.",target:null},
@@ -374,6 +411,7 @@ function renderTutorial(){
  }
 }
 function openTutorial(){tutorialIndex=0;renderTutorial();document.getElementById("tutorialOverlay").classList.add("open")}
+function openAboutApp(){clearTutorialSpotlight();document.getElementById("tutorialOverlay").classList.remove("open");showTab("aboutApp")}
 function nextTutorial(){if(tutorialIndex<tutorialSteps.length-1){tutorialIndex++;renderTutorial()}else finishTutorial()}
 function skipTutorial(){finishTutorial()}
 function finishTutorial(){clearTutorialSpotlight();try{localStorage.setItem("ss_tutorial_completed_v1","1")}catch(e){}document.getElementById("tutorialOverlay").classList.remove("open")}
