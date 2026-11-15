@@ -184,24 +184,26 @@ html[data-theme="light"] .chat-list-copy strong{color:#252044}
 html[data-theme="light"] .chat-preview{color:#68708f}
 @media(max-width:620px){.chat-list{gap:10px}.chat-list-item{padding:13px;gap:11px;border-radius:15px}.chat-list-item>.avatar{width:46px;height:46px;flex-basis:46px}.chat-preview{font-size:12px}.chat-meta{font-size:10px}}
 
-/* First-launch interactive onboarding */
-.tutorial-overlay{display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;padding:22px;background:rgba(5,8,27,.76);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+/* First-launch onboarding: clear, guided spotlight, no blur */
+.tutorial-overlay{display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;padding:22px;background:rgba(5,8,27,.42);backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
 .tutorial-overlay.open{display:flex}
-.tutorial-card{position:relative;z-index:10003;width:min(520px,100%);padding:28px;border:1px solid rgba(185,164,255,.42);border-radius:24px;background:linear-gradient(145deg,#21194d,#111a43 72%);box-shadow:0 28px 90px rgba(0,0,0,.55);color:#f7f5ff}
-.tutorial-kicker{color:#bba8ff;font-size:11px;font-weight:900;letter-spacing:.14em}
-.tutorial-card h2{margin:12px 0 9px;color:#fff;font-size:clamp(21px,4vw,28px);line-height:1.2}
-.tutorial-card p{margin:0;color:#d0d3ef;line-height:1.65}
-.tutorial-progress{display:flex;gap:6px;margin:22px 0 4px}
-.tutorial-progress span{height:5px;flex:1;border-radius:8px;background:rgba(255,255,255,.15)}
-.tutorial-progress span.active{background:linear-gradient(90deg,#9d7bff,#65d8dc)}
-.tutorial-actions{position:relative;z-index:1}
-.tutorial-quiet{background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.18)!important;box-shadow:none!important}
-.tutorial-spotlight{position:relative!important;z-index:10002!important;isolation:isolate;border-radius:16px!important;outline:2px solid #b89aff!important;outline-offset:5px;box-shadow:0 0 0 9999px rgba(5,8,27,.68),0 0 34px rgba(169,137,255,.55)!important;transition:box-shadow .2s ease}
-html[data-theme="light"] .tutorial-card{background:linear-gradient(145deg,#fff,#f0edff);border-color:#d8cdfd;color:#242044}
+.tutorial-card{position:relative;z-index:2;width:min(500px,100%);padding:30px;border:1px solid rgba(185,164,255,.58);border-radius:26px;background:linear-gradient(145deg,#241957 0%,#151e4b 100%);box-shadow:0 22px 65px rgba(0,0,0,.36);color:#f7f5ff}
+.tutorial-kicker{display:flex;align-items:center;gap:9px;color:#c5b5ff;font-size:11px;font-weight:900;letter-spacing:.13em}
+.tutorial-kicker:before{content:"✳";display:grid;place-items:center;width:27px;height:27px;border-radius:9px;background:rgba(173,145,255,.2);font-size:16px;letter-spacing:0}
+.tutorial-card h2{margin:15px 0 10px;color:#fff;font-size:clamp(22px,4vw,29px);line-height:1.2}
+.tutorial-card p{margin:0;color:#e0def5;line-height:1.7;font-size:15px}
+.tutorial-progress{display:flex;gap:6px;margin:23px 0 6px}
+.tutorial-progress span{height:5px;flex:1;border-radius:8px;background:rgba(255,255,255,.2)}
+.tutorial-progress span.active{background:linear-gradient(90deg,#b49aff,#67dce2)}
+.tutorial-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:20px}
+.tutorial-actions button{min-height:46px;border-radius:13px;padding:0 19px}
+.tutorial-quiet{background:rgba(255,255,255,.09)!important;border:1px solid rgba(255,255,255,.22)!important;color:#f4f0ff!important;box-shadow:none!important}
+.tutorial-spotlight{position:relative!important;z-index:9999!important;isolation:isolate;border-radius:16px!important;outline:3px solid #a98aff!important;outline-offset:4px;box-shadow:0 0 0 5px rgba(169,137,255,.16)!important}
+html[data-theme="light"] .tutorial-card{background:linear-gradient(145deg,#fff,#f1edff);border-color:#d8cdfd;color:#242044}
 html[data-theme="light"] .tutorial-card h2{color:#242044}
-html[data-theme="light"] .tutorial-card p{color:#5e6280}
+html[data-theme="light"] .tutorial-card p{color:#4d5273}
 html[data-theme="light"] .tutorial-quiet{color:#33266d!important;background:#f2efff!important;border-color:#ddd5fa!important}
-@media(max-width:520px){.tutorial-overlay{padding:14px;align-items:flex-end}.tutorial-card{padding:23px 20px 20px;border-radius:22px 22px 16px 16px;margin-bottom:12px}.tutorial-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.tutorial-actions button{width:100%;min-width:0}}
+@media(max-width:520px){.tutorial-overlay{padding:12px;align-items:flex-end;background:rgba(5,8,27,.34)}.tutorial-card{padding:23px 20px 20px;border-radius:22px;margin-bottom:10px}.tutorial-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.tutorial-actions button{width:100%;min-width:0;padding:0 10px}}
 </style>
 </head>
 <script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
