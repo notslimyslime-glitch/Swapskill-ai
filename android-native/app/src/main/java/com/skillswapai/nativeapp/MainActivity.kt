@@ -749,7 +749,11 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                     )
                     "Rooms" -> {
                         val room = selectedRoom
-                        if (room == null) RoomsScreen(Modifier.padding(padding), swaps, userId.orEmpty()) {
+                        if (room == null) RoomsScreen(
+                            Modifier.padding(padding), swaps, userId.orEmpty(),
+                            members.associate { it.id to it.avatarEmoji },
+                            notifications.firstOrNull { !it.isRead }
+                        ) {
                             selectedRoom = it
                             messageDraft = ""
                             loadRoomMessages(it.id, accessToken!!)
