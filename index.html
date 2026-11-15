@@ -183,6 +183,25 @@ html[data-theme="light"] .chat-list-item{background:linear-gradient(115deg,#fff,
 html[data-theme="light"] .chat-list-copy strong{color:#252044}
 html[data-theme="light"] .chat-preview{color:#68708f}
 @media(max-width:620px){.chat-list{gap:10px}.chat-list-item{padding:13px;gap:11px;border-radius:15px}.chat-list-item>.avatar{width:46px;height:46px;flex-basis:46px}.chat-preview{font-size:12px}.chat-meta{font-size:10px}}
+
+/* First-launch interactive onboarding */
+.tutorial-overlay{display:none;position:fixed;inset:0;z-index:10000;align-items:center;justify-content:center;padding:22px;background:rgba(5,8,27,.76);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px)}
+.tutorial-overlay.open{display:flex}
+.tutorial-card{position:relative;z-index:10003;width:min(520px,100%);padding:28px;border:1px solid rgba(185,164,255,.42);border-radius:24px;background:linear-gradient(145deg,#21194d,#111a43 72%);box-shadow:0 28px 90px rgba(0,0,0,.55);color:#f7f5ff}
+.tutorial-kicker{color:#bba8ff;font-size:11px;font-weight:900;letter-spacing:.14em}
+.tutorial-card h2{margin:12px 0 9px;color:#fff;font-size:clamp(21px,4vw,28px);line-height:1.2}
+.tutorial-card p{margin:0;color:#d0d3ef;line-height:1.65}
+.tutorial-progress{display:flex;gap:6px;margin:22px 0 4px}
+.tutorial-progress span{height:5px;flex:1;border-radius:8px;background:rgba(255,255,255,.15)}
+.tutorial-progress span.active{background:linear-gradient(90deg,#9d7bff,#65d8dc)}
+.tutorial-actions{position:relative;z-index:1}
+.tutorial-quiet{background:rgba(255,255,255,.08)!important;border:1px solid rgba(255,255,255,.18)!important;box-shadow:none!important}
+.tutorial-spotlight{position:relative!important;z-index:10002!important;isolation:isolate;border-radius:16px!important;outline:2px solid #b89aff!important;outline-offset:5px;box-shadow:0 0 0 9999px rgba(5,8,27,.68),0 0 34px rgba(169,137,255,.55)!important;transition:box-shadow .2s ease}
+html[data-theme="light"] .tutorial-card{background:linear-gradient(145deg,#fff,#f0edff);border-color:#d8cdfd;color:#242044}
+html[data-theme="light"] .tutorial-card h2{color:#242044}
+html[data-theme="light"] .tutorial-card p{color:#5e6280}
+html[data-theme="light"] .tutorial-quiet{color:#33266d!important;background:#f2efff!important;border-color:#ddd5fa!important}
+@media(max-width:520px){.tutorial-overlay{padding:14px;align-items:flex-end}.tutorial-card{padding:23px 20px 20px;border-radius:22px 22px 16px 16px;margin-bottom:12px}.tutorial-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.tutorial-actions button{width:100%;min-width:0}}
 </style>
 </head>
 <script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
@@ -326,21 +345,43 @@ const tutorialSteps=[
  {title:"8. Use the safety tools",description:"You can report or block a member, and unblock them later from your profile. Blocking prevents new swap requests between you. Keep personal details private and meet in public with a trusted adult aware.",target:"account"},
  {title:"Made by students, for students ❤️",description:"SkillSwap AI is built by Mayank, Founder, and Harsh, Co-founder. Thanks for being part of the first version. Now go make your first skill swap!",target:null}
 ];
-let tutorialIndex=0;
+let tutorialIndex=0,tutorialAutoStarted=false;
+const tutorialTargets={
+ account:"#account .account-hero",
+ discover:"#discover .hero",
+ activity:"#activity .sectionhead",
+ notifications:"#notifications .notification-hero",
+ chat:"#chat .sectionhead",
+ swaps:"#swaps .sectionhead",
+ leaderboard:"#leaderboard .leaderboard-hero"
+};
+function clearTutorialSpotlight(){document.querySelectorAll(".tutorial-spotlight").forEach(el=>el.classList.remove("tutorial-spotlight"))}
 function renderTutorial(){
- const s=tutorialSteps[tutorialIndex];if(!s)return;
+ const step=tutorialSteps[tutorialIndex];if(!step)return;
  document.getElementById("tutorialKicker").textContent="QUICK TOUR · "+(tutorialIndex+1)+" OF "+tutorialSteps.length;
- document.getElementById("tutorialTitle").textContent=s.title;
- document.getElementById("tutorialDescription").textContent=s.description;
+ document.getElementById("tutorialTitle").textContent=step.title;
+ document.getElementById("tutorialDescription").textContent=step.description;
  document.getElementById("tutorialProgress").innerHTML=tutorialSteps.map((_,i)=>'<span class="'+(i<=tutorialIndex?'active':'')+'"></span>').join("");
  document.getElementById("tutorialNext").textContent=tutorialIndex===tutorialSteps.length-1?"Let's go! ✓":"Next →";
  document.getElementById("tutorialSkip").textContent=tutorialIndex===tutorialSteps.length-1?"Close tour":"Skip tour";
- 
+ clearTutorialSpotlight();
+ if(step.target){
+  showTab(step.target);
+  const selector=tutorialTargets[step.target];
+  requestAnimationFrame(()=>{const target=selector&&document.querySelector(selector);if(target){target.classList.add("tutorial-spotlight");target.scrollIntoView({behavior:"smooth",block:"center"});}});
+ }
 }
 function openTutorial(){tutorialIndex=0;renderTutorial();document.getElementById("tutorialOverlay").classList.add("open")}
 function nextTutorial(){if(tutorialIndex<tutorialSteps.length-1){tutorialIndex++;renderTutorial()}else finishTutorial()}
 function skipTutorial(){finishTutorial()}
-function finishTutorial(){localStorage.setItem("ss_tutorial_completed_v1","1");document.getElementById("tutorialOverlay").classList.remove("open")}
+function finishTutorial(){clearTutorialSpotlight();try{localStorage.setItem("ss_tutorial_completed_v1","1")}catch(e){}document.getElementById("tutorialOverlay").classList.remove("open")}
+function maybeStartFirstLaunchTutorial(){
+ if(!user||tutorialAutoStarted)return;
+ let completed=false;try{completed=localStorage.getItem("ss_tutorial_completed_v1")==="1"}catch(e){}
+ if(completed)return;
+ tutorialAutoStarted=true;
+ setTimeout(openTutorial,900);
+}
 
 function norm(s){return String(s||"").trim().toLowerCase().replace(/[^a-z0-9 ]/g,"").replace(/\\s+/g," ")}
 function getMatch(p){if(!profile.teach||!profile.learn)return {score:null,label:"Add your skills for a match"};let canTeach=norm(profile.teach)===norm(p.learn),canLearn=norm(profile.learn)===norm(p.teach);return {score:canTeach&&canLearn?100:canTeach||canLearn?70:25,label:canTeach&&canLearn?"Perfect two-way swap":canTeach||canLearn?"One-way skill match":"Explore this skill"}}
@@ -528,7 +569,7 @@ async function signOutEverywhere(){
  closeRoomChannels();closeNotificationChannel();user=null;isFirstProfileSetup=false;profileSaved=false;profileDirty=false;people=[];swaps=[];notifications=[];renderNotificationBadge();renderNotifications();syncAuthPanel();renderPeople();renderRequests();renderSwaps();showToast("Signed out on all devices.");
 }
 async function signOut(){closeRoomChannels();closeNotificationChannel();const {error}=await db.auth.signOut();if(error){showToast("Sign out failed: "+error.message);return;}user=null;isFirstProfileSetup=false;profileSaved=false;profileDirty=false;people=[];swaps=[];notifications=[];renderNotificationBadge();renderNotifications();syncAuthPanel();status("Signed out.");renderPeople();renderRequests();}
-async function loadCloud(){const {data:{user:u}}=await db.auth.getUser();user=u;syncAuthPanel();if(!user){closeNotificationChannel();notifications=[];renderNotificationBadge();renderNotifications();status("Not signed in. Demo profiles only.");renderPeople();return;}status("Loading shared SkillSwap data...");const [p,s,pl,lb]=await Promise.all([db.from("profiles").select("id,display_name,teaches,learns,category,about,swap_mode,avatar_emoji,skills_tags").order("created_at",{ascending:false}),db.from("swap_requests").select("id,sender_id,recipient_id,skill,status,sender_completed,recipient_completed").order("created_at",{ascending:false}),db.from("swap_plans").select("id,request_id,goal,session_at,tasks,updated_by").order("updated_at",{ascending:false}),db.from("leaderboard_scores").select("user_id,display_name,total_xp,weekly_xp").order("total_xp",{ascending:false})]);if(p.error||s.error){status("Could not load profiles or requests: "+(p.error||s.error).message);return;}people=p.data||[];swaps=s.data||[];await loadBlockedMembers();plans=pl.error?[]:(pl.data||[]);leaderboardRows=lb.error?[]:(lb.data||[]);requests=swaps.filter(x=>x.sender_id===user.id).map(x=>({name:(people.find(p=>p.id===x.recipient_id)||{}).display_name||"Member",skill:x.skill,status:x.status}));const mine=people.find(x=>x.id===user.id);isFirstProfileSetup=!mine;profileSaved=!!mine;profileDirty=false;profile=mine?{name:mine.display_name,teach:mine.teaches,learn:mine.learns,cat:mine.category,about:mine.about,swapMode:mine.swap_mode||"online",avatar:mine.avatar_emoji||"🎓",tags:mine.skills_tags||[]}:{};fillProfile();renderPeople();renderRequests();renderSwaps();renderChatPage();renderLeaderboard();updateStats();updateProfileCompletion();updateProfileSaveButton();await loadNotifications();setupNotificationChannel();status("Connected! "+people.length+" shared profile(s)."+(pl.error?" Session planner setup needed: run supabase-session-planner.sql.":""));const route=location.hash.slice(1);if(route.startsWith("room-"))setTimeout(()=>selectChatRoom(route.slice(5)),0);}
+async function loadCloud(){const {data:{user:u}}=await db.auth.getUser();user=u;syncAuthPanel();if(!user){closeNotificationChannel();notifications=[];renderNotificationBadge();renderNotifications();status("Not signed in. Demo profiles only.");renderPeople();return;}status("Loading shared SkillSwap data...");const [p,s,pl,lb]=await Promise.all([db.from("profiles").select("id,display_name,teaches,learns,category,about,swap_mode,avatar_emoji,skills_tags").order("created_at",{ascending:false}),db.from("swap_requests").select("id,sender_id,recipient_id,skill,status,sender_completed,recipient_completed").order("created_at",{ascending:false}),db.from("swap_plans").select("id,request_id,goal,session_at,tasks,updated_by").order("updated_at",{ascending:false}),db.from("leaderboard_scores").select("user_id,display_name,total_xp,weekly_xp").order("total_xp",{ascending:false})]);if(p.error||s.error){status("Could not load profiles or requests: "+(p.error||s.error).message);return;}people=p.data||[];swaps=s.data||[];await loadBlockedMembers();plans=pl.error?[]:(pl.data||[]);leaderboardRows=lb.error?[]:(lb.data||[]);requests=swaps.filter(x=>x.sender_id===user.id).map(x=>({name:(people.find(p=>p.id===x.recipient_id)||{}).display_name||"Member",skill:x.skill,status:x.status}));const mine=people.find(x=>x.id===user.id);isFirstProfileSetup=!mine;profileSaved=!!mine;profileDirty=false;profile=mine?{name:mine.display_name,teach:mine.teaches,learn:mine.learns,cat:mine.category,about:mine.about,swapMode:mine.swap_mode||"online",avatar:mine.avatar_emoji||"🎓",tags:mine.skills_tags||[]}:{};fillProfile();renderPeople();renderRequests();renderSwaps();renderChatPage();renderLeaderboard();updateStats();updateProfileCompletion();updateProfileSaveButton();await loadNotifications();setupNotificationChannel();status("Connected! "+people.length+" shared profile(s)."+(pl.error?" Session planner setup needed: run supabase-session-planner.sql.":""));maybeStartFirstLaunchTutorial();const route=location.hash.slice(1);if(route.startsWith("room-"))setTimeout(()=>selectChatRoom(route.slice(5)),0);}
 async function saveProfile(){if(!user)return status("Sign in first to save your profile.");if(!profileCardReady()){updateProfileSaveButton();document.getElementById("savedMsg").textContent="Complete your display name and both skills before saving.";return;}const button=document.getElementById("saveProfileButton");if(button)button.disabled=true;const rawTags=document.getElementById("skillTags").value.split(",").map(x=>x.trim()).filter(Boolean);const tags=[...new Set(rawTags)].slice(0,8).map(x=>x.slice(0,24));const row={id:user.id,display_name:document.getElementById("name").value.trim(),teaches:document.getElementById("teach").value.trim(),learns:document.getElementById("learn").value.trim(),category:document.getElementById("mycat").value,about:document.getElementById("about").value.trim(),swap_mode:document.getElementById("swapMode").value,avatar_emoji:profile.avatar||"🎓",skills_tags:tags};const {error}=await db.from("profiles").upsert(row);if(error){document.getElementById("savedMsg").textContent=error.message;updateProfileSaveButton();return;}document.getElementById("savedMsg").textContent="Saved to the shared database!";profileSaved=true;profileDirty=false;isFirstProfileSetup=false;updateAccountPreview();updateProfileCompletion();updateProfileSaveButton();await loadCloud();}
 
 function setLeaderboardPeriod(period){leaderboardPeriod=period==="weekly"?"weekly":"all";renderLeaderboard();}
@@ -753,7 +794,6 @@ function renderSwaps(){
 db.auth.onAuthStateChange((_e,s)=>{user=s?.user||null;if(!user){closeRoomChannels();closeNotificationChannel();notifications=[];renderNotificationBadge();renderNotifications();}syncAuthPanel();if(user)setTimeout(loadCloud,0);else{people=[];swaps=[];renderPeople();renderRequests();renderSwaps();renderChatPage();}});
 const initialPage=location.hash.slice(1);if(initialPage.startsWith("room-"))showTab("chat");else showTab(["discover","activity","chat","leaderboard","swaps","account","notifications"].includes(initialPage)?initialPage:"discover");
 loadCloud();
-if(user&&!localStorage.getItem("ss_tutorial_completed_v1"))setTimeout(openTutorial,650);
 
 
 function applyTheme(mode){
