@@ -44,15 +44,20 @@ jobs:
         working-directory: android-native
         run: gradle assembleDebug
 
-      - name: Verify APK package
+      - name: Verify and prepare release APK
         run: |
-          test -s android-native/app/build/outputs/apk/debug/app-debug.apk
-          file android-native/app/build/outputs/apk/debug/app-debug.apk
+          APK="android-native/app/build/outputs/apk/debug/app-debug.apk"
+          test -s "$APK"
+          "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | tee /tmp/apk-badging.txt
+          grep -q "package: name='com.skillswapai.app' versionCode='7' versionName='1.0.0'" /tmp/apk-badging.txt
+          "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
+          cp "$APK" SkillSwap-AI-v1.0.0.apk
+          sha256sum SkillSwap-AI-v1.0.0.apk
 
-      - name: Upload native APK
+      - name: Upload verified APK
         uses: actions/upload-artifact@v4
         with:
-          name: SkillSwap-AI-Native-Android
-          path: android-native/app/build/outputs/apk/debug/app-debug.apk
+          name: SkillSwap-AI-v1.0.0
+          path: SkillSwap-AI-v1.0.0.apk
           if-no-files-found: error
-          retention-days: 14
+          retention-days: 30
