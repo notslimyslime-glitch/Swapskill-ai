@@ -9,6 +9,7 @@ on:
   push:
     branches:
       - mobile/capacitor-bootstrap
+      - v1.1-development
     paths:
       - "android-native/**"
       - ".github/workflows/native-android.yml"
@@ -49,15 +50,15 @@ jobs:
           APK="android-native/app/build/outputs/apk/debug/app-debug.apk"
           test -s "$APK"
           "$ANDROID_HOME/build-tools/35.0.0/aapt" dump badging "$APK" | tee /tmp/apk-badging.txt
-          grep -q "package: name='com.skillswapai.app' versionCode='7' versionName='1.0.0'" /tmp/apk-badging.txt
+          grep -q "package: name='com.skillswapai.app' versionCode='8' versionName='1.1.0'" /tmp/apk-badging.txt
           "$ANDROID_HOME/build-tools/35.0.0/apksigner" verify --verbose "$APK"
-          cp "$APK" SkillSwap-AI-v1.0.0.apk
-          sha256sum SkillSwap-AI-v1.0.0.apk
+          cp "$APK" SkillSwap-AI-v1.1.0.apk
+          sha256sum SkillSwap-AI-v1.1.0.apk
 
       - name: Upload verified APK
         uses: actions/upload-artifact@v4
         with:
-          name: SkillSwap-AI-v1.0.0
-          path: SkillSwap-AI-v1.0.0.apk
+          name: SkillSwap-AI-v1.1.0
+          path: SkillSwap-AI-v1.1.0.apk
           if-no-files-found: error
           retention-days: 30
