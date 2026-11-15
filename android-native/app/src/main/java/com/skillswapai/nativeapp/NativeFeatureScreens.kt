@@ -82,12 +82,14 @@ private fun skillOverlap(wanted: String, offered: String): Float {
     val b = offered.trim().lowercase()
     if (a.isBlank() || b.isBlank()) return 0f
     if (a == b) return 1f
-    if (a.contains(b) || b.contains(a)) return 0.86f
     val aw = Regex("[a-z0-9]+").findAll(a).map { it.value }.toSet()
     val bw = Regex("[a-z0-9]+").findAll(b).map { it.value }.toSet()
     if (aw.isEmpty() || bw.isEmpty()) return 0f
     val common = aw.intersect(bw).size.toFloat()
-    return (common / maxOf(aw.size, bw.size)) * 0.72f
+    if (common == 0f) return 0f
+    val jaccard = common / aw.union(bw).size.toFloat()
+    val coverage = common / minOf(aw.size, bw.size).toFloat()
+    return (jaccard * 0.55f + coverage * 0.45f).coerceIn(0f, 0.82f)
 }
 
 @Composable
@@ -95,12 +97,15 @@ fun MatchmakingScreen(
     modifier: Modifier, members: List<Member>, userTeach: String, userLearn: String, busy: Boolean,
     requestedMemberIds: Set<String>, onRequest: (String) -> Unit, onEditSkills: () -> Unit
 ) {
+    var matchSearch by remember { mutableStateOf("") }
     val matches = remember(members, userTeach, userLearn) {
         members.map { member ->
             val learnFit = skillOverlap(userLearn, member.teaches)
             val teachFit = skillOverlap(userTeach, member.learns)
-            val score = (learnFit * 65f + teachFit * 35f).toInt().coerceIn(0, 100)
-            Triple(member, score, learnFit > 0f && teachFit > 0f)
+            val mutual = learnFit > 0f && teachFit > 0f
+            val balancedFit = learnFit * 0.58f + teachFit * 0.42f
+            val score = (balancedFit * 92f + if (mutual) 8f else 0f).toInt().coerceIn(0, 100)
+            Triple(member, score, mutual)
         }.filter { it.second >= 18 }.sortedByDescending { it.second }
     }
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -123,6 +128,9 @@ fun MatchmakingScreen(
                 }
                 if (busy) CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
             }
+            OutlinedTextField(value = matchSearch, onValueChange = { matchSearch = it },
+                modifier = Modifier.fillMaxWidth(), singleLine = true,
+                placeholder = { Text("Filter matches by name or skill") })
         }
         if (userTeach.isBlank() || userLearn.isBlank()) {
             item {
@@ -139,10 +147,15 @@ fun MatchmakingScreen(
                 }
             }
         }
-        items(matches, key = { it.first.id }) { (member, score, mutual) ->
+        items(matches.filter { (member, _, _) ->
+            matchSearch.isBlank() || listOf(member.name, member.teaches, member.learns).any { it.contains(matchSearch, ignoreCase = true) }
+        }, key = { it.first.id }) { (member, score, mutual) ->
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(9.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Box(Modifier.size(42.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondary), contentAlignment = Alignment.Center) {
+                        Text(member.avatarEmoji, fontSize = 22.sp)
+                    }
                     Column(Modifier.weight(1f)) {
                         Text(member.name, color = Cream, fontSize = 17.sp, fontWeight = FontWeight.Bold)
                         Text(if (mutual) "Two-way skill fit" else "Can teach what you want to learn",
@@ -312,6 +325,19 @@ fun LeaderboardScreen(modifier: Modifier, entries: List<LeaderboardEntry>, busy:
 @Composable
 fun NotificationsScreen(modifier: Modifier, notifications: List<AppNotification>, busy: Boolean,
     onRead: (String) -> Unit, onBack: () -> Unit, onRefresh: () -> Unit) {
+    var filter by remember { mutableStateOf("All") }
+    val statusNotes = notifications.filter { note ->
+        val kind = "${note.type} ${note.title} ${note.body}".lowercase()
+        !kind.contains("message") && !kind.contains("chat")
+    }
+    val visibleNotes = statusNotes.filter { note ->
+        val kind = "${note.type} ${note.title} ${note.body}".lowercase()
+        when (filter) {
+            "Requests" -> kind.contains("request")
+            "Updates" -> listOf("accept", "declin", "complet").any { kind.contains(it) }
+            else -> true
+        }
+    }
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -323,8 +349,15 @@ fun NotificationsScreen(modifier: Modifier, notifications: List<AppNotification>
                 TextButton(onClick = onRefresh) { Text("Refresh") }
             }
         }
-        if (notifications.isEmpty()) item { Text(if (busy) "Loading notifications…" else "You're all caught up.", color = Muted) }
-        items(notifications, key = { it.id }) { note ->
+        item {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf("All", "Requests", "Updates").forEach { choice ->
+                    FilterChip(selected = filter == choice, onClick = { filter = choice }, label = { Text(choice) })
+                }
+            }
+        }
+        if (visibleNotes.isEmpty()) item { Text(if (busy) "Loading notifications…" else "You're all caught up.", color = Muted) }
+        items(visibleNotes, key = { it.id }) { note ->
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(if (note.isRead) MaterialTheme.colorScheme.surface else MaterialTheme.colorScheme.secondary).padding(15.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(note.title, color = Cream, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
