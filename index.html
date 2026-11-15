@@ -334,6 +334,31 @@ button:focus-visible,a:focus-visible{outline:2px solid #b9a2ff;outline-offset:3p
  ::view-transition-group(root),::view-transition-old(root),::view-transition-new(root){animation-duration:.01ms!important}
 }
 
+
+/* Fluid motion refinement */
+:root{--motion-ease:cubic-bezier(.2,.75,.25,1);--motion-duration:360ms}
+button,a,.tabs,.tabs button,.card,.stat,.formbox,.account-panel,.notification-item,.leaderboard-row,.chat-list-item,.profile-modal-card,.tutorial-card{
+ transition:transform var(--motion-duration) var(--motion-ease),opacity var(--motion-duration) ease,background-color var(--motion-duration) ease,border-color var(--motion-duration) ease,box-shadow var(--motion-duration) ease,color var(--motion-duration) ease,filter var(--motion-duration) ease
+}
+.page{animation:pageIn 420ms var(--motion-ease) both}
+@keyframes pageIn{from{opacity:0;transform:translate3d(0,14px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+.hero,.account-hero,.leaderboard-hero,.notification-hero,.about-hero{animation:heroIn 560ms var(--motion-ease) both}
+@keyframes heroIn{from{opacity:0;transform:translate3d(0,12px,0) scale(.992)}to{opacity:1;transform:translate3d(0,0,0) scale(1)}}
+.cards>.card,.leaderboard-row,.notification-item,.chat-list-item{animation:itemIn 440ms var(--motion-ease) both}
+.cards>.card:nth-child(2),.leaderboard-row:nth-child(2),.notification-item:nth-child(2),.chat-list-item:nth-child(2){animation-delay:45ms}
+.cards>.card:nth-child(3),.leaderboard-row:nth-child(3),.notification-item:nth-child(3),.chat-list-item:nth-child(3){animation-delay:90ms}
+.cards>.card:nth-child(4),.leaderboard-row:nth-child(4),.notification-item:nth-child(4),.chat-list-item:nth-child(4){animation-delay:135ms}
+@keyframes itemIn{from{opacity:0;transform:translate3d(0,10px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+.profile-modal-card{animation:modalIn 360ms var(--motion-ease) both}
+@keyframes modalIn{from{opacity:0;transform:translate3d(0,12px,0) scale(.985)}to{opacity:1;transform:translate3d(0,0,0) scale(1)}}
+.wa-conversation .room-message{animation:chatMessageIn 320ms var(--motion-ease) both}
+@keyframes chatMessageIn{from{opacity:0;transform:translate3d(0,7px,0)}to{opacity:1;transform:translate3d(0,0,0)}}
+.toast{transition:opacity 280ms ease,transform 360ms var(--motion-ease)}
+@media(prefers-reduced-motion:reduce){
+ .page,.hero,.account-hero,.leaderboard-hero,.notification-hero,.about-hero,.cards>.card,.leaderboard-row,.notification-item,.chat-list-item,.profile-modal-card,.tutorial-overlay.open .tutorial-card,.wa-conversation .room-message{animation:none!important}
+ button,a,.tabs,.tabs button,.card,.stat,.formbox,.account-panel,.notification-item,.leaderboard-row,.chat-list-item,.profile-modal-card,.tutorial-card,.toast{transition:none!important}
+}
+
 </style>
 </head>
 <script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
