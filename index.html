@@ -268,6 +268,33 @@ footer strong{color:var(--navy)!important}
  .account-swap-icon{display:none}
 }
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;transition-duration:.01ms!important}}
+
+/* THEME ENGINE: persistent night studio */
+.theme-toggle{width:auto!important;min-width:76px;height:42px!important;padding:0 12px!important;display:flex!important;align-items:center;justify-content:center;gap:7px;border-radius:999px!important;background:var(--navy)!important;color:#fff!important;border:1px solid var(--navy)!important;box-shadow:0 3px 0 #172536!important;font-size:12px!important;font-weight:850!important}
+.theme-toggle-icon{font-size:18px;line-height:1}
+.theme-toggle-label{letter-spacing:.01em}
+html[data-theme="dark"]{color-scheme:dark;--paper:#101820;--white:#182630;--ink:#edf3f2;--muted:#a5b4bd;--line:#30414c;--navy:#dce9e7;--navy2:#b7ceca;--coral:#ff8068;--teal:#55c5ad;--lilac:#37334a;--gold:#f2cc79;--shadow:0 16px 42px rgba(0,0,0,.28);--bg:#101820;--panel:#182630;--panel2:#202f39;--text:#edf3f2;--a:#ff8068;--b:#55c5ad}
+html[data-theme="dark"],html[data-theme="dark"] body{background:var(--paper);color:var(--ink)}
+html[data-theme="dark"] .top,html[data-theme="dark"] .tabs{border-color:var(--line)}
+html[data-theme="dark"] .brand{color:#edf3f2}
+html[data-theme="dark"] .brand:before{background:#263b49;color:var(--gold);box-shadow:4px 4px 0 #344752}
+html[data-theme="dark"] .top-actions button:not(.profile-shortcut):not(.theme-toggle){background:#20313c;color:#edf3f2;border-color:#3a4c57;box-shadow:0 3px 0 #0a1117}
+html[data-theme="dark"] .top-actions .profile-shortcut{background:#e5efed;color:#15232b;border-color:#e5efed}
+html[data-theme="dark"] .tabs button{color:#aab9c0}
+html[data-theme="dark"] .tabs button:hover,html[data-theme="dark"] .tabs button.active{background:#263b47;color:#fff;border-color:#3b5663}
+html[data-theme="dark"] .card,html[data-theme="dark"] .panel,html[data-theme="dark"] .account-panel,html[data-theme="dark"] .notification-card,html[data-theme="dark"] .chat-list-item,html[data-theme="dark"] .room-card,html[data-theme="dark"] .leaderboard-row,html[data-theme="dark"] .stat-card,html[data-theme="dark"] .form-card{background:var(--panel);color:var(--ink);border-color:var(--line);box-shadow:var(--shadow)}
+html[data-theme="dark"] input,html[data-theme="dark"] textarea,html[data-theme="dark"] select{background:#101c24!important;color:#edf3f2!important;border-color:#40515b!important}
+html[data-theme="dark"] input::placeholder,html[data-theme="dark"] textarea::placeholder{color:#8fa1aa}
+html[data-theme="dark"] .muted,html[data-theme="dark"] .empty,html[data-theme="dark"] small,html[data-theme="dark"] .subtle{color:var(--muted)}
+html[data-theme="dark"] .tag,html[data-theme="dark"] .chip,html[data-theme="dark"] .pill{background:#263c46;color:#dcebe8;border-color:#405660}
+html[data-theme="dark"] .auth-gate-card{background:#182630;color:#edf3f2;border-color:#344852}
+html[data-theme="dark"] .auth-gate-subtitle,html[data-theme="dark"] .auth-gate-footnote{color:#b5c3c8}
+html[data-theme="dark"] .account-hero{background:#1b303b;color:#f0f5f3}
+html[data-theme="dark"] .account-hero p,html[data-theme="dark"] .account-hero small{color:#c0d0d0}
+html[data-theme="dark"] .notification-badge{border-color:var(--paper)}
+html[data-theme="dark"] .tutorial-card,html[data-theme="dark"] .modal-card,html[data-theme="dark"] .dialog-card{background:var(--panel);color:var(--ink);border-color:var(--line)}
+html[data-theme="dark"] .theme-toggle{background:#f1cb78!important;color:#17232c!important;border-color:#f1cb78!important;box-shadow:0 3px 0 #c49b4f!important}
+@media(max-width:480px){.theme-toggle{min-width:42px!important;width:42px!important;padding:0!important}.theme-toggle-label{display:none}}
 </style>
 </head>
 <script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
@@ -291,7 +318,7 @@ footer strong{color:var(--navy)!important}
  </section>
 </div>
 <main class="wrap">
-<header class="top"><div class="brand">Skill<span>Swap</span> ✳</div><div class="top-actions"><button class="tutorial-help" type="button" onclick="openTutorial()" aria-label="Open tutorial" title="How SkillSwap works">?</button><button class="notification-shortcut" type="button" onclick="showTab('notifications')" aria-label="Open notifications" title="Notifications"><svg class="ui-icon ui-bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span id="notificationBadge" class="notification-badge hidden">0</span></button><button class="profile-shortcut" type="button" onclick="showTab('account')" aria-label="Open your profile" title="Your profile"><span id="navProfileAvatar">S</span></button></div></header>
+<header class="top"><div class="brand">Skill<span>Swap</span> ✳</div><div class="top-actions"><button class="tutorial-help" type="button" onclick="openTutorial()" aria-label="Open tutorial" title="How SkillSwap works">?</button><button class="theme-toggle" id="themeToggle" type="button" onclick="toggleTheme()" aria-label="Switch to dark mode" title="Switch theme"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Night</span></button><button class="notification-shortcut" type="button" onclick="showTab('notifications')" aria-label="Open notifications" title="Notifications"><svg class="ui-icon ui-bell" viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9"/><path d="M10 21h4"/></svg><span id="notificationBadge" class="notification-badge hidden">0</span></button><button class="profile-shortcut" type="button" onclick="showTab('account')" aria-label="Open your profile" title="Your profile"><span id="navProfileAvatar">S</span></button></div></header>
 <section id="account" class="page hidden">
 <button class="account-back" type="button" onclick="showTab(previousTab || 'discover')" aria-label="Go back" title="Back"><svg class="ui-icon ui-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/><path d="M9 12h11"/></svg></button>
 <section class="account-hero">
@@ -840,4 +867,17 @@ const initialPage=location.hash.slice(1);if(initialPage.startsWith("room-"))show
 loadCloud();
 if(user&&!localStorage.getItem("ss_tutorial_completed_v1"))setTimeout(openTutorial,650);
 
+
+function applyTheme(mode){
+ const dark=mode==="dark";
+ document.documentElement.dataset.theme=dark?"dark":"light";
+ const btn=document.getElementById("themeToggle");
+ if(btn){btn.querySelector(".theme-toggle-icon").textContent=dark?"☀":"☾";btn.querySelector(".theme-toggle-label").textContent=dark?"Day":"Night";btn.setAttribute("aria-label",dark?"Switch to light mode":"Switch to dark mode");btn.title=dark?"Switch to light mode":"Switch to dark mode";}
+}
+function toggleTheme(){
+ const next=document.documentElement.dataset.theme==="dark"?"light":"dark";
+ try{localStorage.setItem("ss_theme",next)}catch(e){}
+ applyTheme(next);
+}
+try{applyTheme(localStorage.getItem("ss_theme")==="dark"?"dark":"light")}catch(e){applyTheme("light")}
 </script></body></html>
