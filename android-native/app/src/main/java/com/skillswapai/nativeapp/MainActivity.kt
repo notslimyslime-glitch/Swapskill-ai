@@ -40,6 +40,8 @@ import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Groups
 import androidx.compose.material.icons.filled.Leaderboard
 import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.*
@@ -1166,11 +1168,19 @@ private fun NotificationPreferencesScreen(modifier: Modifier, prefs: android.con
         TextButton(onClick = onBack) { Text("‹ Back to account", color = MaterialTheme.colorScheme.primary) }
         Text("MANAGE NOTIFICATIONS", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold)
         Text("Choose what appears in your inbox", color = Cream, fontSize = 24.sp, fontWeight = FontWeight.Bold)
-        SettingsSwitchRow("New swap requests", "Show incoming request updates.", requests) {
-            requests = it; prefs.edit().putBoolean("notify_requests", it).apply()
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("New swap requests", color = Cream, fontWeight = FontWeight.SemiBold)
+                Text("Show incoming request updates.", color = Muted, fontSize = 11.sp)
+            }
+            Switch(checked = requests, onCheckedChange = { requests = it; prefs.edit().putBoolean("notify_requests", it).apply() })
         }
-        SettingsSwitchRow("Swap status updates", "Show accepted, declined and completed updates.", updates) {
-            updates = it; prefs.edit().putBoolean("notify_status", it).apply()
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("Swap status updates", color = Cream, fontWeight = FontWeight.SemiBold)
+                Text("Show accepted, declined and completed updates.", color = Muted, fontSize = 11.sp)
+            }
+            Switch(checked = updates, onCheckedChange = { updates = it; prefs.edit().putBoolean("notify_status", it).apply() })
         }
         Text("These preferences are saved on this device. Push alerts need notification-service setup.", color = Muted, fontSize = 11.sp)
     }
