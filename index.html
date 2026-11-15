@@ -359,6 +359,54 @@ button,a,.tabs,.tabs button,.card,.stat,.formbox,.account-panel,.notification-it
  button,a,.tabs,.tabs button,.card,.stat,.formbox,.account-panel,.notification-item,.leaderboard-row,.chat-list-item,.profile-modal-card,.tutorial-card,.toast{transition:none!important}
 }
 
+
+/* Authentication gate: polished standalone welcome experience */
+.auth-gate{position:fixed;inset:0;z-index:10000;display:grid;place-items:center;padding:28px;overflow-y:auto;background:#080d27;isolation:isolate}
+.auth-gate.hidden{display:none!important}
+.auth-gate-backdrop{position:absolute;inset:0;z-index:-2;background:radial-gradient(ellipse at 18% 18%,rgba(126,67,255,.34),transparent 38%),radial-gradient(ellipse at 86% 78%,rgba(30,83,226,.28),transparent 36%),linear-gradient(135deg,#080d27,#11143c 55%,#080d27)}
+.auth-gate-backdrop:before,.auth-gate-backdrop:after{content:"";position:absolute;border:1px solid rgba(177,151,255,.13);border-radius:50%;width:520px;height:520px;right:-170px;top:-230px;box-shadow:0 0 100px rgba(125,85,255,.1) inset}
+.auth-gate-backdrop:after{width:360px;height:360px;right:auto;left:-160px;top:auto;bottom:-210px}
+.auth-gate-card{position:relative;width:min(100%,1040px);min-height:610px;display:grid;grid-template-columns:1.02fr .98fr;overflow:hidden;border:1px solid rgba(169,149,255,.3);border-radius:30px;background:linear-gradient(145deg,rgba(34,40,99,.94),rgba(13,20,58,.96));box-shadow:0 35px 110px rgba(0,0,0,.48),0 0 70px rgba(113,74,255,.13);backdrop-filter:blur(28px);animation:authCardIn .7s cubic-bezier(.2,.75,.25,1) both}
+.auth-gate-card:before{content:"";position:absolute;inset:0 auto 0 0;width:5px;background:linear-gradient(180deg,#b69aff,#7652f2,#4b8cff)}
+.auth-gate-brand{position:absolute;top:28px;left:34px;z-index:2;display:flex;align-items:center;gap:11px;color:#fff;font-size:20px;font-weight:900;letter-spacing:-.5px}
+.auth-gate-brand>span:last-child>span{color:#bca5ff}
+.auth-gate-mark{width:39px;height:39px;display:grid;place-items:center;border-radius:13px;background:linear-gradient(145deg,#a477ff,#5541cf);font-size:23px;box-shadow:0 8px 25px #7549ff55}
+.auth-gate-leaf{position:absolute;left:8%;top:27%;font-size:clamp(150px,23vw,270px);line-height:1;color:rgba(177,147,255,.08);pointer-events:none;transform:rotate(-12deg)}
+.auth-gate-content{grid-column:2;align-self:center;padding:90px 64px 54px 48px;position:relative;z-index:1}
+.auth-gate-content:before{content:"";position:absolute;z-index:-1;left:-34px;top:50%;width:1px;height:68%;transform:translateY(-50%);background:linear-gradient(transparent,rgba(177,151,255,.28),transparent)}
+.auth-gate-eyebrow{margin:0 0 15px;color:#b99aff;font-size:10px;font-weight:900;letter-spacing:2.2px}
+.auth-gate-content h1{margin:0;color:#fff;font-size:clamp(34px,4vw,49px);line-height:1.08;letter-spacing:-1.8px}
+.auth-gate-subtitle{margin:15px 0 27px;color:#b9c2e7;font-size:14px;line-height:1.75;max-width:410px}
+.auth-gate-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:5px;margin-bottom:23px;border:1px solid rgba(155,145,255,.2);border-radius:13px;background:rgba(5,10,37,.46)}
+.auth-gate-tabs button{min-height:42px;padding:9px 12px;border:0;border-radius:9px;background:transparent;color:#aeb7dc;box-shadow:none;font-size:13px;font-weight:800}
+.auth-gate-tabs button.active{color:#fff;background:linear-gradient(120deg,#7853e8,#5148bd);box-shadow:0 5px 18px rgba(88,61,195,.32)}
+.welcome-auth-form{display:grid;gap:9px}
+.welcome-auth-form label{margin-top:5px;color:#c7cbed;font-size:12px;font-weight:800}
+.welcome-auth-form input{width:100%;height:49px;padding:0 15px;border:1px solid rgba(153,145,221,.32);border-radius:12px;background:rgba(5,10,37,.56);color:#fff;transition:border-color .25s,box-shadow .25s,background .25s}
+.welcome-auth-form input:focus{border-color:#a58aff;background:rgba(8,13,43,.85);box-shadow:0 0 0 4px rgba(139,92,246,.16)}
+.welcome-auth-form input::placeholder{color:#7984b1}
+.auth-gate-submit{display:flex;align-items:center;justify-content:center;gap:12px;width:100%;min-height:50px;margin-top:13px;border:1px solid rgba(196,177,255,.35);border-radius:13px;background:linear-gradient(110deg,#8959f5,#5548cf 70%,#4264d9);box-shadow:0 12px 28px rgba(92,63,208,.3);font-weight:850;transition:transform .25s cubic-bezier(.2,.75,.25,1),box-shadow .25s,filter .25s}
+.auth-gate-submit:hover{transform:translateY(-2px);box-shadow:0 16px 34px rgba(92,63,208,.4);filter:brightness(1.08)}
+.auth-gate-submit span{font-size:19px;transition:transform .25s}
+.auth-gate-submit:hover span{transform:translateX(4px)}
+.auth-gate-status{min-height:22px;margin:15px 0 0;color:#aeb9e2;font-size:12px;line-height:1.5}
+.auth-gate-footnote{margin:17px 0 0;color:#7f8bb9;font-size:10px;line-height:1.6}
+@keyframes authCardIn{from{opacity:0;transform:translate3d(0,18px,0) scale(.985)}to{opacity:1;transform:translate3d(0,0,0) scale(1)}}
+html[data-theme="light"] .auth-gate-backdrop{background:radial-gradient(ellipse at 18% 18%,rgba(157,126,255,.32),transparent 38%),radial-gradient(ellipse at 86% 78%,rgba(102,154,255,.25),transparent 36%),linear-gradient(135deg,#eef0ff,#e8e9ff 55%,#f5f6ff)}
+html[data-theme="light"] .auth-gate-card{background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(242,244,255,.97));border-color:#d9ddf4;box-shadow:0 35px 90px rgba(57,53,119,.18)}
+html[data-theme="light"] .auth-gate-content h1{color:#25294f}
+html[data-theme="light"] .auth-gate-subtitle{color:#626b91}
+html[data-theme="light"] .auth-gate-tabs{background:#eef0fb;border-color:#dfe2f4}
+html[data-theme="light"] .auth-gate-tabs button{color:#626b91}
+html[data-theme="light"] .auth-gate-tabs button.active{color:#fff}
+html[data-theme="light"] .welcome-auth-form label{color:#515b7d}
+html[data-theme="light"] .welcome-auth-form input{background:#fff;color:#25294f;border-color:#d7dcef}
+html[data-theme="light"] .auth-gate-status{color:#596486}
+html[data-theme="light"] .auth-gate-footnote{color:#7b84a5}
+@media(max-width:760px){.auth-gate{padding:16px}.auth-gate-card{width:min(100%,520px);min-height:0;grid-template-columns:1fr;border-radius:24px}.auth-gate-brand{top:23px;left:24px}.auth-gate-leaf{left:auto;right:7%;top:6%;font-size:170px}.auth-gate-content{grid-column:1;padding:112px 28px 30px}.auth-gate-content:before{display:none}.auth-gate-content h1{font-size:clamp(34px,9vw,44px)}.auth-gate-subtitle{margin-bottom:22px}}
+@media(max-width:420px){.auth-gate{padding:10px}.auth-gate-content{padding:100px 20px 24px}.auth-gate-card{border-radius:20px}.auth-gate-brand{left:20px;top:19px}}
+@media(prefers-reduced-motion:reduce){.auth-gate-card{animation:none}.auth-gate-submit,.auth-gate-submit span,.welcome-auth-form input{transition:none}}
+
 </style>
 </head>
 <script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
