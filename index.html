@@ -310,6 +310,30 @@ button:focus-visible,a:focus-visible{outline:2px solid #b9a2ff;outline-offset:3p
 @media(hover:none){.cards>.card:hover,.stat:hover,.account-panel:hover,.notification-item:hover,.leaderboard-row:hover{transform:none}}
 @media(prefers-reduced-motion:reduce){.page,.hero,.account-hero,.leaderboard-hero,.notification-hero,.about-hero,.cards>.card,.leaderboard-row,.notification-item,.chat-list-item,.profile-modal-card,.tutorial-overlay.open .tutorial-card,.wa-conversation .room-message{animation:none!important}button,a,.tabs,.tabs button,.card,.stat,.formbox,.account-panel,.notification-item,.leaderboard-row,.chat-list-item,.profile-modal-card,.tutorial-card{transition:none!important}}
 
+
+/* Full-screen theme ripple, anchored to the theme switch */
+@supports (view-transition-name:root){
+ html{view-transition-name:root}
+ ::view-transition-group(root){animation-duration:720ms}
+ ::view-transition-old(root),::view-transition-new(root){mix-blend-mode:normal}
+ ::view-transition-new(root){animation:themeRippleReveal 720ms cubic-bezier(.2,.72,.18,1) both}
+ ::view-transition-old(root){animation:none}
+ html.theme-ripple-reverse::view-transition-new(root){animation:themeRippleHold 720ms ease both}
+ html.theme-ripple-reverse::view-transition-old(root){animation:themeRippleInvert 720ms cubic-bezier(.2,.72,.18,1) both}
+}
+@keyframes themeRippleReveal{
+ from{clip-path:circle(0 at var(--theme-ripple-x,50%) var(--theme-ripple-y,50%))}
+ to{clip-path:circle(150vmax at var(--theme-ripple-x,50%) var(--theme-ripple-y,50%))}
+}
+@keyframes themeRippleHold{from{opacity:1}to{opacity:1}}
+@keyframes themeRippleInvert{
+ from{clip-path:circle(150vmax at var(--theme-ripple-x,50%) var(--theme-ripple-y,50%))}
+ to{clip-path:circle(0 at var(--theme-ripple-x,50%) var(--theme-ripple-y,50%))}
+}
+@media(prefers-reduced-motion:reduce){
+ ::view-transition-group(root),::view-transition-old(root),::view-transition-new(root){animation-duration:.01ms!important}
+}
+
 </style>
 </head>
 <script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
@@ -949,9 +973,23 @@ function applyTheme(mode){
  if(btn){btn.querySelector(".theme-toggle-icon").textContent=dark?"☀":"☾";btn.querySelector(".theme-toggle-label").textContent=dark?"Day":"Night";btn.setAttribute("aria-label",dark?"Switch to light mode":"Switch to dark mode");btn.title=dark?"Switch to light mode":"Switch to dark mode";}
 }
 function toggleTheme(){
- const next=document.documentElement.dataset.theme==="dark"?"light":"dark";
+ const root=document.documentElement;
+ const next=root.dataset.theme==="dark"?"light":"dark";
+ const button=document.getElementById("themeToggle");
+ const rect=button?.getBoundingClientRect();
+ const x=rect?rect.left+rect.width/2:window.innerWidth/2;
+ const y=rect?rect.top+rect.height/2:window.innerHeight/2;
+ root.style.setProperty("--theme-ripple-x",x+"px");
+ root.style.setProperty("--theme-ripple-y",y+"px");
  try{localStorage.setItem("ss_theme",next)}catch(e){}
- applyTheme(next);
+ const change=()=>applyTheme(next);
+ if(document.startViewTransition&&!window.matchMedia("(prefers-reduced-motion: reduce)").matches){
+  const transition=document.startViewTransition(change);
+  transition.ready.then(()=>{
+   root.classList.toggle("theme-ripple-reverse",next==="dark");
+  }).catch(()=>{});
+  transition.finished.finally(()=>root.classList.remove("theme-ripple-reverse"));
+ }else change();
 }
 try{applyTheme(localStorage.getItem("ss_theme")==="dark"?"dark":"light")}catch(e){applyTheme("light")}
 </script></body></html>
