@@ -7,6 +7,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.*
@@ -184,12 +185,19 @@ fun RoomsScreen(modifier: Modifier, swaps: List<Swap>, userId: String, onOpen: (
         items(active, key = { it.id }) { swap ->
             val mine = swap.senderId == userId
             val partner = if (mine) swap.recipientName else swap.senderName
-            Column(Modifier.fillMaxWidth().animateContentSize().clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surface).padding(16.dp)) {
-                Text(partner, color = Cream, fontWeight = FontWeight.Bold, fontSize = 17.sp)
-                Text("Skill: ${swap.skill}", color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
-                Text("Your private swap room", color = Muted, fontSize = 12.sp)
-                Spacer(Modifier.height(10.dp))
-                Button(onClick = { onOpen(swap) }, modifier = Modifier.fillMaxWidth()) { Text("Open room") }
+            Column(Modifier.fillMaxWidth().animateContentSize().clip(RoundedCornerShape(18.dp))
+                .background(MaterialTheme.colorScheme.surface).clickable { onOpen(swap) }.padding(16.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Box(Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondary), contentAlignment = Alignment.Center) {
+                        Text("🎓", fontSize = 22.sp)
+                    }
+                    Column(Modifier.weight(1f)) {
+                        Text(partner, color = Cream, fontWeight = FontWeight.Bold, fontSize = 17.sp)
+                        Text("Skill: ${swap.skill}", color = MaterialTheme.colorScheme.primary, fontSize = 13.sp)
+                        Text("Your private swap room", color = Muted, fontSize = 12.sp)
+                    }
+                    Text("›", color = MaterialTheme.colorScheme.primary, fontSize = 28.sp)
+                }
             }
         }
     }
@@ -220,7 +228,6 @@ fun MissionRoomScreen(
                 Text(partner, color = Cream, fontWeight = FontWeight.Bold, fontSize = 17.sp)
                 Text("Mission Room · ${swap.skill}", color = Muted, fontSize = 11.sp)
             }
-            IconButton(onClick = onRefresh) { Icon(Icons.Default.Refresh, "Refresh messages", tint = Cream) }
         }
         Text("Keep phone numbers, addresses and social handles private. Meet only in a public place with a trusted adult aware.",
             color = Color(0xFFB9D6B2), fontSize = 11.sp, modifier = Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.secondary).padding(12.dp))
@@ -240,9 +247,11 @@ fun MissionRoomScreen(
             items(messages, key = { it.id }) { msg ->
                 val mine = msg.senderId == userId
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = if (mine) Arrangement.End else Arrangement.Start) {
-                    Column(Modifier.widthIn(max = 300.dp).clip(RoundedCornerShape(16.dp)).background(if (mine) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surface).padding(12.dp)) {
+                    Column(Modifier.widthIn(max = 300.dp).clip(RoundedCornerShape(if (mine) 18.dp else 18.dp))
+                        .background(if (mine) MaterialTheme.colorScheme.tertiary else MaterialTheme.colorScheme.surface)
+                        .padding(horizontal = 14.dp, vertical = 11.dp)) {
                         Text(if (mine) "You" else if (swap.senderId == userId) swap.recipientName else swap.senderName,
-                            color = if (mine) Color(0xFFB9D6B2) else Cream, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                            color = if (mine) Color(0xFFB9D6B2) else MaterialTheme.colorScheme.primary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
                         Text(msg.body, color = Cream, fontSize = 14.sp)
                     }
                 }
