@@ -206,6 +206,13 @@ private fun SkillSwapApp(activity: ComponentActivity) {
     var accentChoice by remember { mutableStateOf(uiPrefs.getString("accent", "Sage") ?: "Sage") }
     var animationsEnabled by remember { mutableStateOf(uiPrefs.getBoolean("animations_enabled", true)) }
     var hapticsEnabled by remember { mutableStateOf(uiPrefs.getBoolean("haptics_enabled", true)) }
+    var showConnectionDialog by remember { mutableStateOf(false) }
+
+    LaunchedEffect(message) {
+        val lower = message.lowercase()
+        showConnectionDialog = listOf("unable to resolve host", "failed to connect", "network is unreachable",
+            "no address associated", "connection timed out", "socket timeout", "network error").any { lower.contains(it) }
+    }
 
     fun blockMember(member: Member) {
         val token = accessToken ?: return
@@ -641,6 +648,12 @@ private fun SkillSwapApp(activity: ComponentActivity) {
             activity.window.statusBarColor = systemBar
             activity.window.navigationBarColor = systemBar
         }
+        if (showConnectionDialog) {
+            AlertDialog(onDismissRequest = { showConnectionDialog = false },
+                title = { Text("Connection problem") },
+                text = { Text("SkillSwap can't reach the server right now. Check your internet connection and try again.") },
+                confirmButton = { TextButton(onClick = { showConnectionDialog = false }) { Text("Got it") } })
+        }
         if (accessToken == null && busy) {
             LoadingLaunchScreen(message.ifBlank { "Getting your SkillSwap ready…" })
         } else if (accessToken == null) {
@@ -725,11 +738,11 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                 ) { targetTab ->
                 when (targetTab) {
                     "Discover" -> DiscoverScreen(
-                        Modifier.padding(padding), displayName, members, busy, message,
+                        Modifier.padding(padding), displayName, members, leaderboard, busy, message,
                         swaps.filter { (it.senderId == userId || it.recipientId == userId) && it.status in listOf("pending", "accepted") }
                             .map { if (it.senderId == userId) it.recipientId else it.senderId }.toSet(),
                         swaps.filter { it.status == "accepted" }.associateBy { if (it.senderId == userId) it.recipientId else it.senderId },
-                        { tab = "Account" }, { loadMembers(accessToken!!) }, { sendSwapRequest(it) },
+                        { tab = "Account" }, { tab = "Ranks" }, { loadMembers(accessToken!!) }, { sendSwapRequest(it) },
                         { tab = "Notifications"; loadNotifications(accessToken!!) },
                         { room -> selectedRoom = room; tab = "Rooms"; messageDraft = ""; loadRoomMessages(room.id, accessToken!!); loadRoomPlan(room.id, accessToken!!) },
                         { blockMember(it) }, { member, reason, details -> reportMember(member, reason, details) }
@@ -884,7 +897,7 @@ private fun ProfileSetupScreen(name: String, setName: (String) -> Unit, teach: S
 
 @Composable
 private fun DiscoverScreen(
-    modifier: Modifier, name: String, members: List<Member>, busy: Boolean, message: String,
+    modifier: Modifier, name: String, members: List<Member>, leaderboard: List<LeaderboardEntry>, busy: Boolean, message: String,
     requestedMemberIds: Set<String>, acceptedRoomsByMember: Map<String, Swap>,
     onAccount: () -> Unit, onRefresh: () -> Unit,
     onRequestSwap: (String) -> Unit, onNotifications: () -> Unit,
@@ -930,6 +943,26 @@ private fun DiscoverScreen(
                     }
                     Text("✦", color = MaterialTheme.colorScheme.primary, fontSize = 48.sp,
                         modifier = Modifier.graphicsLayer { scaleX = pulse; scaleY = pulse })
+                }
+            }
+        }
+        item {
+            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface).padding(15.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text("COMMUNITY LEADERBOARD", color = MaterialTheme.colorScheme.primary, fontSize = 10.sp, fontWeight = FontWeight.Bold, letterSpacing = 1.5.sp)
+                        Text("Top skill sharers", color = Cream, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                    }
+                    TextButton(onClick = onRanks) { Text("See all  →") }
+                }
+                if (leaderboard.isEmpty()) Text("Your community's XP champions will show up here.", color = Muted, fontSize = 11.sp)
+                else leaderboard.take(3).forEachIndexed { index, entry ->
+                    Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
+                        Text(listOf("🥇", "🥈", "🥉")[index], fontSize = 18.sp)
+                        Text(entry.name, color = Cream, fontWeight = if (index == 0) FontWeight.Bold else FontWeight.Medium,
+                            modifier = Modifier.weight(1f).padding(start = 9.dp), fontSize = 13.sp)
+                        Text("${entry.points} XP", color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
                 }
             }
         }
