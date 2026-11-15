@@ -169,6 +169,20 @@ html[data-theme="light"] .account-back,html[data-theme="light"] .notification-ba
 .room-page-head>button[aria-label="Back to chats"]{display:inline-flex;align-items:center;justify-content:center;flex:0 0 42px;width:42px;height:42px;padding:0;border:1px solid rgba(167,139,250,.48);border-radius:12px;background:rgba(91,64,196,.24);color:inherit;font-size:0;line-height:1;cursor:pointer}
 .room-page-head>button[aria-label="Back to chats"]::before{content:"";display:block;width:11px;height:11px;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateX(2px) rotate(45deg)}
 @media(max-width:620px){.account-back,.notification-back{width:42px;height:42px;min-width:42px;min-height:42px;margin:0 0 8px}}
+
+/* Mission Rooms inbox: full-width chat banners, not floating avatars */
+.chat-list{display:flex;flex-direction:column;gap:12px;margin:18px 0}
+.chat-list-item{display:flex;align-items:center;gap:14px;min-width:0;width:100%;padding:16px 18px;border:1px solid rgba(155,145,255,.24);border-radius:18px;background:linear-gradient(115deg,rgba(83,58,166,.42),rgba(22,36,91,.72));box-shadow:0 10px 28px rgba(0,0,0,.16);cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+.chat-list-item:hover,.chat-list-item:focus-visible{background:linear-gradient(115deg,rgba(103,72,198,.56),rgba(30,48,112,.82));border-color:rgba(174,151,255,.65);transform:translateY(-2px);outline:none}
+.chat-list-item>.avatar{width:52px;height:52px;flex:0 0 52px;border-radius:16px;font-size:20px}
+.chat-list-copy{display:flex;flex:1;flex-direction:column;gap:3px;min-width:0}
+.chat-list-copy strong{display:block;color:var(--text);font-size:15px;line-height:1.35;overflow-wrap:anywhere}
+.chat-preview{color:var(--muted);font-size:13px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.chat-meta{flex:0 0 auto;color:#b9a8ff;font-size:11px;font-weight:800;text-align:right}
+html[data-theme="light"] .chat-list-item{background:linear-gradient(115deg,#fff,#f1efff);border-color:#ded8f6;box-shadow:0 8px 22px rgba(54,42,112,.08)}
+html[data-theme="light"] .chat-list-copy strong{color:#252044}
+html[data-theme="light"] .chat-preview{color:#68708f}
+@media(max-width:620px){.chat-list{gap:10px}.chat-list-item{padding:13px;gap:11px;border-radius:15px}.chat-list-item>.avatar{width:46px;height:46px;flex-basis:46px}.chat-preview{font-size:12px}.chat-meta{font-size:10px}}
 </style>
 </head>
 <script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
