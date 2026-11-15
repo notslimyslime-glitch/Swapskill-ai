@@ -109,7 +109,7 @@ private fun ambientTertiary(choice: String): Color = when (choice) {
     else -> ForestLight
 }
 
-data class Member(val id: String, val name: String, val teaches: String, val learns: String, val about: String)
+data class Member(val id: String, val name: String, val teaches: String, val learns: String, val about: String, val avatarEmoji: String = "🎓")
 data class Swap(
     val id: String, val senderId: String, val recipientId: String, val skill: String,
     val status: String, val senderCompleted: Boolean, val recipientCompleted: Boolean,
@@ -239,7 +239,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
             busy = true
             try {
                 val result = withContext(Dispatchers.IO) {
-                    val connection = URL("$SUPABASE_URL/rest/v1/profiles?select=id,display_name,teaches,learns,about&order=created_at.desc").openConnection() as HttpURLConnection
+                    val connection = URL("$SUPABASE_URL/rest/v1/profiles?select=id,display_name,teaches,learns,about,avatar_emoji&order=created_at.desc").openConnection() as HttpURLConnection
                     try {
                         connection.setRequestProperty("apikey", SUPABASE_KEY)
                         connection.setRequestProperty("Authorization", "Bearer $token")
@@ -252,7 +252,7 @@ private fun SkillSwapApp(activity: ComponentActivity) {
                         val array = JSONArray(raw)
                         (0 until array.length()).map { i ->
                             val item = array.getJSONObject(i)
-                            Member(item.optString("id"), item.optString("display_name"), item.optString("teaches"), item.optString("learns"), item.optString("about"))
+                            Member(item.optString("id"), item.optString("display_name"), item.optString("teaches"), item.optString("learns"), item.optString("about"), item.optString("avatar_emoji").ifBlank { "🎓" })
                         }
                     } finally { connection.disconnect() }
                 }
