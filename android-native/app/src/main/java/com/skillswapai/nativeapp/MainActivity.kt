@@ -899,7 +899,7 @@ private fun ProfileSetupScreen(name: String, setName: (String) -> Unit, teach: S
 private fun DiscoverScreen(
     modifier: Modifier, name: String, members: List<Member>, leaderboard: List<LeaderboardEntry>, busy: Boolean, message: String,
     requestedMemberIds: Set<String>, acceptedRoomsByMember: Map<String, Swap>,
-    onAccount: () -> Unit, onRefresh: () -> Unit,
+    onAccount: () -> Unit, onRanks: () -> Unit, onRefresh: () -> Unit,
     onRequestSwap: (String) -> Unit, onNotifications: () -> Unit,
     onOpenRoom: (Swap) -> Unit, onBlock: (Member) -> Unit, onReport: (Member, String, String) -> Unit
 ) {
