@@ -152,6 +152,13 @@ html[data-theme="light"] .notification-item{background:rgba(255,255,255,.9);bord
 html[data-theme="light"] .notification-copy p{color:#697397}
 html[data-theme="light"] .notification-copy small{color:#7b84a4}
 @media(max-width:420px){.notification-item{grid-template-columns:36px minmax(0,1fr) 7px;column-gap:10px;padding:14px 12px}.notification-icon{width:36px;height:36px;font-size:18px}.notification-copy strong{font-size:13px}.notification-copy p{font-size:12px}}
+
+/* Visible notification back button and arrow icon */
+.notification-back{display:inline-flex!important;align-items:center;justify-content:center;gap:8px;width:44px;height:44px;margin:4px 0 2px;padding:0;border:1px solid rgba(167,139,250,.45);border-radius:13px;background:rgba(91,64,196,.24);color:#eeeaff;box-shadow:none;cursor:pointer}
+.notification-back:hover{background:rgba(139,92,246,.38);transform:translateX(-2px)}
+.notification-back .ui-icon{display:block;width:21px;height:21px;flex:0 0 21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+html[data-theme="light"] .notification-back{background:#fff;color:#4735a0;border-color:#d7dcef}
+@media(max-width:620px){.notification-back{width:42px;height:42px;margin:0 0 4px}}
 </style>
 </head>
 <script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
