@@ -283,6 +283,33 @@ html[data-theme="light"] .tutorial-card h2{color:#242044}
 html[data-theme="light"] .tutorial-card p{color:#4d5273}
 html[data-theme="light"] .tutorial-quiet{color:#33266d!important;background:#f2efff!important;border-color:#ddd5fa!important}
 @media(max-width:520px){.tutorial-overlay{padding:12px;align-items:flex-end;background:rgba(5,8,27,.34)}.tutorial-card{padding:23px 20px 20px;border-radius:22px;margin-bottom:10px}.tutorial-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}.tutorial-actions button{width:100%;min-width:0;padding:0 10px}}
+
+/* SkillSwap motion polish: quick, calm and consistent */
+:root{--motion-ease:cubic-bezier(.22,.68,0,1.02)}
+button,a,.tabs,.tabs button,.card,.stat,.formbox,.account-panel,.notification-item,.leaderboard-row,.chat-list-item,.profile-modal-card,.tutorial-card{transition:transform .2s var(--motion-ease),opacity .2s ease,background-color .2s ease,border-color .2s ease,box-shadow .2s ease,filter .2s ease}
+button:active{transform:translateY(0) scale(.97)}
+button:focus-visible,a:focus-visible{outline:2px solid #b9a2ff;outline-offset:3px}
+.page{animation:pageIn .32s var(--motion-ease) both}
+@keyframes pageIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.hero,.account-hero,.leaderboard-hero,.notification-hero,.about-hero{animation:heroIn .48s var(--motion-ease) both}
+@keyframes heroIn{from{opacity:0;transform:translateY(10px) scale(.99)}to{opacity:1;transform:translateY(0) scale(1)}}
+.cards>.card,.leaderboard-row,.notification-item,.chat-list-item{animation:itemIn .34s var(--motion-ease) both}
+.cards>.card:nth-child(2),.leaderboard-row:nth-child(2),.notification-item:nth-child(2),.chat-list-item:nth-child(2){animation-delay:35ms}
+.cards>.card:nth-child(3),.leaderboard-row:nth-child(3),.notification-item:nth-child(3),.chat-list-item:nth-child(3){animation-delay:70ms}
+.cards>.card:nth-child(4),.leaderboard-row:nth-child(4),.notification-item:nth-child(4),.chat-list-item:nth-child(4){animation-delay:105ms}
+@keyframes itemIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.cards>.card:hover,.stat:hover,.account-panel:hover{transform:translateY(-3px)}
+.tabs button{transition:background .2s ease,border-color .2s ease,color .2s ease,padding-left .2s var(--motion-ease)}
+.tabs button:not(.active):hover{padding-left:19px}
+.notification-item:hover,.leaderboard-row:hover{transform:translateY(-2px)}
+.profile-modal-card{animation:modalIn .24s var(--motion-ease) both;transform-origin:center}
+@keyframes modalIn{from{opacity:0;transform:translateY(9px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+.tutorial-overlay.open .tutorial-card{animation:modalIn .28s var(--motion-ease) both}
+.toast{transition:opacity .22s ease,transform .28s var(--motion-ease)}
+.wa-conversation .room-message{animation:chatMessageIn .24s var(--motion-ease) both}
+@media(hover:none){.cards>.card:hover,.stat:hover,.account-panel:hover,.notification-item:hover,.leaderboard-row:hover{transform:none}}
+@media(prefers-reduced-motion:reduce){.page,.hero,.account-hero,.leaderboard-hero,.notification-hero,.about-hero,.cards>.card,.leaderboard-row,.notification-item,.chat-list-item,.profile-modal-card,.tutorial-overlay.open .tutorial-card,.wa-conversation .room-message{animation:none!important}button,a,.tabs,.tabs button,.card,.stat,.formbox,.account-panel,.notification-item,.leaderboard-row,.chat-list-item,.profile-modal-card,.tutorial-card{transition:none!important}}
+
 </style>
 </head>
 <script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
