@@ -127,6 +127,13 @@ html[data-theme="light"] .leaderboard-name{color:#25234d}
 html[data-theme="light"] .leaderboard-sub{color:#657096}
 html[data-theme="light"] .leaderboard-xp{color:#167b70}
 
+
+/* Leaderboard personal-rank spacing fix */
+.my-rank-card{display:flex;align-items:center;justify-content:space-between;gap:24px;flex-wrap:wrap;padding:20px 22px;line-height:1.5}
+.my-rank-card>span{display:block;min-width:110px}
+.my-rank-card>span>strong{display:block;margin-top:5px;font-size:25px;line-height:1.2;letter-spacing:-.4px}
+.my-rank-card>strong{display:block;margin-left:auto;font-size:22px;line-height:1.3;white-space:nowrap}
+@media(max-width:420px){.my-rank-card{gap:12px;padding:16px}.my-rank-card>strong{margin-left:0}}
 </style>
 </head>
 <script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
