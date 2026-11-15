@@ -168,13 +168,24 @@ fun MatchmakingScreen(
 }
 
 @Composable
-fun RoomsScreen(modifier: Modifier, swaps: List<Swap>, userId: String, onOpen: (Swap) -> Unit) {
+fun RoomsScreen(
+    modifier: Modifier, swaps: List<Swap>, userId: String,
+    avatarByUserId: Map<String, String> = emptyMap(),
+    unreadPreview: AppNotification? = null,
+    onOpen: (Swap) -> Unit
+) {
     val active = swaps.filter { it.status == "accepted" }
     LazyColumn(modifier.fillMaxSize(), contentPadding = PaddingValues(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         item {
             Text("MISSION ROOMS", color = MaterialTheme.colorScheme.primary, fontSize = 11.sp, fontWeight = FontWeight.Bold, letterSpacing = 2.sp)
             Text("Your swap chats", color = Cream, fontSize = 27.sp, fontWeight = FontWeight.Bold)
             Text("Private rooms appear after a swap is accepted.", color = Muted, fontSize = 13.sp)
+            unreadPreview?.let { note ->
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.secondary).padding(13.dp)) {
+                    Text("NEW UPDATE · ${note.title}", color = MaterialTheme.colorScheme.primary, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Text(note.body, color = Cream, fontSize = 12.sp)
+                }
+            }
         }
         if (active.isEmpty()) item {
             Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surface).padding(20.dp)) {
@@ -189,7 +200,7 @@ fun RoomsScreen(modifier: Modifier, swaps: List<Swap>, userId: String, onOpen: (
                 .background(MaterialTheme.colorScheme.surface).clickable { onOpen(swap) }.padding(16.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     Box(Modifier.size(44.dp).clip(CircleShape).background(MaterialTheme.colorScheme.secondary), contentAlignment = Alignment.Center) {
-                        Text("🎓", fontSize = 22.sp)
+                        Text(avatarByUserId[if (mine) swap.recipientId else swap.senderId] ?: "🎓", fontSize = 22.sp)
                     }
                     Column(Modifier.weight(1f)) {
                         Text(partner, color = Cream, fontWeight = FontWeight.Bold, fontSize = 17.sp)
