@@ -766,6 +766,7 @@ async function loadRoomMessages(requestId){
  const merged=new Map((roomMessages[requestId]||[]).map(m=>[m.id,m]));
  (data||[]).forEach(m=>merged.set(m.id,m));
  roomMessages[requestId]=Array.from(merged.values()).sort((a,b)=>new Date(a.created_at)-new Date(b.created_at)).slice(-50);
+ if(box)box.classList.remove("room-loading");
  renderRoomMessages(requestId);
 }
 async function openMissionRoom(requestId){
