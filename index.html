@@ -159,6 +159,16 @@ html[data-theme="light"] .notification-copy small{color:#7b84a4}
 .notification-back .ui-icon{display:block;width:21px;height:21px;flex:0 0 21px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 html[data-theme="light"] .notification-back{background:#fff;color:#4735a0;border-color:#d7dcef}
 @media(max-width:620px){.notification-back{width:42px;height:42px;margin:0 0 4px}}
+
+/* Shared back-arrow styling across every page */
+.ui-icon{display:block;width:22px;height:22px;flex:0 0 22px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;overflow:visible}
+.account-back,.notification-back{display:inline-flex!important;align-items:center;justify-content:center;width:44px;height:44px;min-width:44px;min-height:44px;padding:0;margin:4px 0 10px;border:1px solid rgba(167,139,250,.48);border-radius:13px;background:rgba(91,64,196,.24);color:#eeeaff;cursor:pointer;visibility:visible;opacity:1}
+.account-back:hover,.notification-back:hover{background:rgba(139,92,246,.38);transform:translateX(-2px)}
+.account-back .ui-icon,.notification-back .ui-icon{display:block;width:22px;height:22px;flex:0 0 22px;stroke:currentColor;fill:none}
+html[data-theme="light"] .account-back,html[data-theme="light"] .notification-back{background:#fff;color:#4735a0;border-color:#d7dcef}
+.room-page-head>button[aria-label="Back to chats"]{display:inline-flex;align-items:center;justify-content:center;flex:0 0 42px;width:42px;height:42px;padding:0;border:1px solid rgba(167,139,250,.48);border-radius:12px;background:rgba(91,64,196,.24);color:inherit;font-size:0;line-height:1;cursor:pointer}
+.room-page-head>button[aria-label="Back to chats"]::before{content:"";display:block;width:11px;height:11px;border-left:2px solid currentColor;border-bottom:2px solid currentColor;transform:translateX(2px) rotate(45deg)}
+@media(max-width:620px){.account-back,.notification-back{width:42px;height:42px;min-width:42px;min-height:42px;margin:0 0 8px}}
 </style>
 </head>
 <script>if(/Android/i.test(navigator.userAgent)){document.documentElement.classList.add("android-device");}</script><body><div id="authGate" class="auth-gate" role="dialog" aria-modal="true" aria-labelledby="welcomeTitle">
